@@ -31,9 +31,11 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
 import { ref, reactive } from 'vue';
-import { usernameSuggest, user_login } from '@/assets/js/login';
+import { usernameSuggest, userLogin } from '@/assets/js/login';
 import { UserInfo, USER_STATUS } from '@/stores/counter';
+import { useCookies } from '@vueuse/integrations/useCookies';
 
+const cookies = useCookies(['user_name', 'user_ip', 'user_status']);
 const name:Ref<string> = ref("")
 const user_info = UserInfo()
 let tips:{
@@ -67,13 +69,18 @@ function querySearchAsync(queryString: string, cb: (arg: any) => void) {
 async function login(name:string){
     try{
 
-        let { ret, ip } = await user_login(name);
+        let { ret, ip } = await userLogin(name);
         
         if(ret)
         {
             user_info.user_name = name
             user_info.user_ip = ip
             user_info.user_status = USER_STATUS.k_logined
+
+            // 更新cookie
+            cookies.set('user_name', user_info.user_name);
+            cookies.set('user_ip', user_info.user_ip);
+            cookies.set('user_status', user_info.user_status);
         }
         else
         {
@@ -95,15 +102,15 @@ async function login(name:string){
 
 <style lang="stylus" scoped>
 .el-card
-    >>> .el-card__header
+    :deep() .el-card__header
         height: 80%
-    >>> .el-card__body
+    :deep() .el-card__body
         display: grid
         grid-row-gap: 3px;
         button
             width: -webkit-fill-available;
 
-    >>> .el-card__header
+    :deep() .el-card__header
         display: flex
         flex-direction: column
         align-items: center

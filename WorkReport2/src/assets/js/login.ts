@@ -3,9 +3,9 @@
 import axios, { AxiosError } from 'axios'
 
 export enum USER_TYPE{
-    super = 0,
-    manager,
-    normalize
+    super = "super",
+    manager = "controller",
+    normalize = "normalizer"
 };
 
 export interface UserCheckResult{
@@ -104,7 +104,7 @@ async function usernameSuggest(input:string):Promise<string[]>
  * @param name 
  * @returns 
  */
-async function user_login(name:string):Promise<{ ret:boolean, ip:string }>
+async function userLogin(name:string):Promise<{ ret:boolean, ip:string }>
 {
     let ret:{ ret:boolean, ip:string } = {
         ret: false,
@@ -134,5 +134,41 @@ async function user_login(name:string):Promise<{ ret:boolean, ip:string }>
     return ret;
 }
 
-export { hasSuperUser, userCheck, usernameSuggest, user_login }
+/**
+ * 增加新用户
+ * @param name 
+ * @param passwd 
+ * @param usertype 
+ * @returns 
+ */
+async function userAdd(name:string,passwd:string,usertype:USER_TYPE):Promise<boolean>
+{
+    let ret:boolean = false;    
+
+    axios({
+        url:'/user',
+        method: 'put',
+        timeout: 5000,
+        responseType: 'json',
+        responseEncoding: 'utf8', 
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        data: {
+          username: name,
+          passwd: passwd,
+          prop: usertype,
+        }
+    }).then((res) => {
+        ret = res.data;
+    }).catch((res)=>{
+        console.dir(res);
+        throw new AxiosError(res);        
+    });
+
+    return ret;
+}
+
+
+export { hasSuperUser, userCheck, usernameSuggest, userLogin, userAdd }
 

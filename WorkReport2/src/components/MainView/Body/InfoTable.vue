@@ -1,46 +1,74 @@
 <template>
   <el-header>
-    <el-date-picker
-          v-model="baseTime"
-          type="week"
-          format="YYYY [年 第] ww [周]"
-          placeholder="基准时间"/>
-    <el-button type="info">本周导出</el-button>
-    <el-button type="success">导出显示</el-button>
-    <el-button type="primary">新增项目</el-button>
+      <el-col :span="8">
+        <el-date-picker v-if="mode!=TableContentType.Repository"
+              v-model="baseTime"
+              type="week"
+              format="YYYY [年 第] ww [周]"
+              value-format="x"
+              placeholder="基准时间"/>
+        <el-switch v-else v-model="checkWithCreateTimeStamp"
+                          inline-prompt
+                          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+                          active-text="完成时间"
+                          inactive-text="创建时间"/>
+      </el-col>
+      <el-col :span="8">
+        <el-date-picker v-if="mode==TableContentType.Repository"
+        v-model="date_range"
+        type="daterange"
+        unlink-panels
+        range-separator="To"
+        :shortcuts="shortcuts"
+        start-placeholder="Start date"
+        end-placeholder="End date"/>
+      </el-col>
+      <el-col :span="8">
+        <el-button type="info" @click="formDataExport(true)">本周导出</el-button>
+        <el-button type="success" @click="formDataExport(false)">导出显示</el-button>
+        <el-button type="primary" @click="formDataAdd">新增项目</el-button>
+      </el-col>
   </el-header>
   <el-container>
   <el-table :data="tableData" min-height="80vh" width="100%" :row-style="RowStyleCalc" row-key="uuid">
     <el-table-column type="expand">
       <template #default="props">
-        <InfoExpand :data="props.row" :index="props.$index" v-model:status="props.row.status"/>
+        <InfoExpand :data="props.row" 
+                    :index="props.$index" 
+                    v-model:status="props.row.status"/>
       </template>
     </el-table-column>
     <el-table-column prop="date" label="日期" min-width="20%">
       <template #default="scope">
-        {{ useDateFormat(new Date(scope.row.date), 'YYYY-MM-DD', { locales: 'zh-CN' }).value }}
+        <div style="display:none">{{ scope.row.uuid+',' }}</div>
+        <div>{{ useDateFormat(new Date(scope.row.date), 'YYYY-MM-DD', { locales: 'zh-CN' }).value }}</div>
       </template>
     </el-table-column>
-    <el-table-column prop="device" label="型号" min-width="30%">
+    <el-table-column prop="device" label="型号" min-width="30%" :filters="deviceList" :filter-method="filterTag">
       <template #default="scope">
       <el-tag :key="iter" v-for="iter in scope.row.device" effect="dark" type="warning">{{ iter }}</el-tag>
       </template>
     </el-table-column>
     <el-table-column prop="name" label="名称" min-width="20%" />
-    <el-table-column prop="type" label="项目类型" min-width="20%">
+    <el-table-column prop="type" label="项目类型" min-width="20%" :filters="typeList" :filter-method="filterTag">
       <template #default="scope">
       <el-tag type="danger">{{ scope.row.type }}</el-tag>
       </template>
     </el-table-column>
-    <el-table-column prop="describe" label="原始需求/反馈" />
-    <el-table-column prop="status" label="执行状态" min-width="24%">
+    <el-table-column prop="describe" label="原始需求/反馈">
       <template #default="scope">
-      <el-badge is-dot :value="scope.row.changeNum" class="item">
-        <el-tag effect="dark" type="info">{{ scope.row.status }}</el-tag>
-      </el-badge>
+        <div class="text">{{ scope.row.describe }}</div>
       </template>
     </el-table-column>
-    <el-table-column prop="person" label="当前处理人员" min-width="20%">
+    <el-table-column prop="status" label="执行状态" min-width="24%" :filters="statusList" :filter-method="filterTag">
+      <template #default="scope">
+      <el-badge v-if="scope.row.changeNum>0" :value="scope.row.changeNum" class="item">
+        <el-tag effect="dark" type="info">{{ scope.row.status }}</el-tag>
+      </el-badge>
+      <el-tag v-else effect="dark" type="info">{{ scope.row.status }}</el-tag>
+      </template>
+    </el-table-column>
+    <el-table-column prop="person" label="当前处理人员" min-width="20%" :filters="personList" :filter-method="filterTag">
       <template #default="scope">
       <el-tag :key="iter" v-for="iter in scope.row.person" effect="dark" type="success">{{ iter }}</el-tag>
       </template>
@@ -51,12 +79,14 @@
     </template>
 
     <template #default="scope">
-        <el-button size="small" @click="true" type="primary">编辑</el-button >
-        <el-button size="small" type="danger" @click="true" >删除</el-button >
+        <el-button size="small" @click="formDataEdit(scope.row)" type="primary" :disabled="viewback ||(mode==TableContentType.HistoryItem)">编辑</el-button >
+        <el-button size="small" type="danger" @click="formDataDel(scope.row.uuid)" :disabled="viewback || !(mode==TableContentType.NewItem)">删除</el-button >
     </template>
 
     </el-table-column>
   </el-table>
+  <ItemEditor v-if="isedit" @FormSubmit="formSubmit" :data="form_data"/>
+  <Export :enable="isexport" :quick="isquick" :data="tableData" @SaveOutputOpt="isexport=false" @DoOutputOpt="isexport=false"/>
   </el-container>
 </template>
 
@@ -64,81 +94,197 @@
 import { useNow, useDateFormat } from '@vueuse/core'
 import InfoExpand from "@/components/MainView/Body/InfoExpand.vue"
 import type { DetailInfo } from "@/components/MainView/Body/InfoExpand.vue"
-import { reactive, ref,  } from "vue";
+import { onMounted, provide, reactive, ref, watch,  } from "vue";
 import type { Ref,  } from "vue";
 import { ItemStatus } from "@/assets/js/timeline";
-import type { ItemData } from "@/assets/js/itemtable";
-import { GetWeekPass } from '@/assets/js/common';
- 
-/// 基准时间戳
-const baseTime:Ref<string> = ref('');
+import { DelItems, GetItems, PutItems, type ItemData } from "@/assets/js/itemtable";
+import { GetWeekIndex, GetWeekInterval } from '@/assets/js/common';
+import type { BaseItemData, ExpandItemData } from '@/assets/js/itemtable';
+import ItemEditor, { type ItemFormData } from '@/components/MainView/Form/ItemEditor.vue';
+import Export from '@/components/MainView/Form/Export.vue';
+import _ from 'lodash'
+import { ElMessage, type FormInstance } from 'element-plus'
+import { Watch } from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
+import { TableContentType } from '@/assets/js/types';
 
+/************************* 基础模式相关变量 **********************************/
+/// 回溯模式
+let viewback:Ref<boolean> = ref(false)
+/// 基准时间戳
+const baseTime:Ref<number> = ref(new Date().getTime());
 /// 关键字搜索
 const search:Ref<string> = ref('');
-
-
-const tableData:ItemData[] = reactive([
-  {
-    uuid: 'abcdefg',
-    date: new Date('2023-01-30').getTime(),
-    device: ["MCC-165"],
-    name: "测试项目",
-    type: "问题反馈",
-    describe: "这是一个测试项目",
-    person: ["舒正阳"],
-
-    link_person:["测试人员"],
-    area: "杭州",
-    subtype: ["问题反馈", "产线问题"],
-    period: 10,
-    url: "svn://123.123.12.1/testcode",
-
-    status: ItemStatus.normal,
-    changeNum: 3
-  }, {
-    uuid: 'abcdefgsqwdqa',
-    date: new Date('2016-10-03').getTime(),
-    device: ["MCC-165"],
-    name: "测试项目2",
-    type: "新增需求",
-    describe: "这是一个测试项目",
-    person: ["舒正阳"],
-
-    link_person:["测试人员"],
-    area: "杭州",
-    subtype: ["问题反馈", "产线问题"],
-    period: 10,
-    url: "svn://123.123.12.1/testcode",
-
-    status: ItemStatus.normal,
-    changeNum: 3
-  }, {
-    uuid: 'abcdefgsqwdq1231a',
-    date: new Date('2016-10-03').getTime(),
-    device: ["MCC-165"],
-    name: "测试项目3",
-    type: "新增需求",
-    describe: "这是一个测试项目",
-    person: ["舒正阳"],
-
-    link_person:["测试人员"],
-    area: "杭州",
-    subtype: ["问题反馈", "产线问题"],
-    period: 10,
-    url: "svn://123.123.12.1/testcode",
-
-    status: ItemStatus.normal,
-    changeNum: 3
-  }
-])
-
-function GetWorkPass()
-{
-  return 1;
+/// 普通模式下更新表格内容
+async function NormalUpdateTable(){
+  const date:Date = new Date(baseTime.value)
+  const start:number = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay()).getTime();
+  const end:number = start+ 3600 * 1000 * 24 * 7;
+  //TODO:Check
+  tableData.value = _.cloneDeep(await GetItems(start,
+                                               end,
+                                               false,
+                                               true));
 }
 
+
+/************************* 归档回溯模式相关变量 **********************************/
+/// 范围时间戳
+const date_range:Ref<number[]> = ref([new Date().getTime() - 3600 * 1000 * 24 * 7,new Date().getTime()]);
+/// 回溯模式下查询项目模式
+let checkWithCreateTimeStamp:Ref<boolean> = ref(false)
+
+/// 回溯模式更新表单方法
+async function RepositoryUpdateTable(){
+  tableData.value = _.cloneDeep(await GetItems(date_range.value[0],
+                                               date_range.value[1],
+                                               true,
+                                               !checkWithCreateTimeStamp.value));
+}
+
+//快捷日期
+const shortcuts = [
+  {
+    text: '上一周',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+      return [start, end]
+    },
+  },
+  {
+    text: '前一月',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+      return [start, end]
+    },
+  },
+  {
+    text: '前一季度',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+      return [start, end]
+    },
+  },
+  {
+    text: '前一年',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 365)
+      return [start, end]
+    },
+  },
+]
+
+/************************* 表单控件相关 **********************************/
+/// 当前表格显示模式
+let mode:Ref<TableContentType> = ref(TableContentType.NewItem);
+/// 当前表单显示内容
+const tableData:Ref<ItemData[]> = ref([])
+
+/// 项目表格的可编辑状态需要同步注入子组件，和时间线组件同步
+provide('viewback', viewback);
+provide('mode', mode);
+
+/// 过滤相关操作
+type List = {
+  text:string,
+  value:string,
+};
+
+function CreateList(obj:ItemData[],key:keyof ItemData):List[]
+{
+  let set = new Set<string>()
+  let ret:List[] = new Array<List>()
+
+  for(const i in obj)
+  {
+    if(typeof(obj[i][key]) === "object")
+    {
+      for(const j in obj[i][key] as string[])
+      {
+        set.add((obj[i][key]as string[])[j] as string)
+      }
+    }
+    else
+    {
+      set.add(obj[i][key] as string)
+    }
+  }
+
+  for(const iter of set)
+  {
+    ret.push({
+      text: iter,
+      value: iter,
+    })
+  }
+
+  return ret;
+}
+
+const deviceList:Ref<List[]> = ref([])
+const typeList:Ref<List[]> = ref([])
+const statusList:Ref<List[]> = ref([])
+const personList:Ref<List[]> = ref([])
+
+/// 过滤显示
+const filterTag = (value: string, row: ItemData, column:any) => {
+  const key:keyof ItemData = column.property
+
+  return row[key] === value;
+}
+
+/// 更新表单显示内容
+async function UpdateTableContent(){
+  if(mode.value == TableContentType.Repository)
+  {
+    await RepositoryUpdateTable();
+  }
+  else
+  {
+    await NormalUpdateTable();
+  }
+
+  deviceList.value = CreateList(tableData.value, "device");
+  typeList.value = CreateList(tableData.value, "type");
+  statusList.value = CreateList(tableData.value, "status");
+  personList.value = CreateList(tableData.value, "person");
+}
+
+/// 页面挂载
+onMounted(async ()=>{
+  mode.value = TableContentType[route.params.tableMode as keyof typeof TableContentType]
+
+  await UpdateTableContent();
+})
+
+//监听路由参数变化进行模式切换
+const route = useRoute()
+watch(route, (newroute) => {
+  if(route.params?.tableMode)
+  {
+    mode.value = TableContentType[route.params.tableMode as keyof typeof TableContentType]
+
+    UpdateTableContent();
+  }
+})
+
+//监听时间戳是不是本周
+watch(baseTime, (newbaseTime) => {
+  viewback.value = GetWeekIndex(newbaseTime) != GetWeekIndex(new Date().getTime());
+  //变更集合
+  UpdateTableContent();
+})
+
 //行样式计算进度百分比
-function RowStyleCalc({ row, rowIndex }):any
+function RowStyleCalc({ row, rowIndex }:{row:ItemData, rowIndex:number}):any
 {
   const PerStatusMap:{
     [key:string]:string
@@ -154,9 +300,9 @@ function RowStyleCalc({ row, rowIndex }):any
    * 计算总时长,已过时间,实际工作时长，之间的占比
    */
   //已过时长/总时长，单位:周
-  let pass_per = GetWeekPass(row.date)/row.period*100
+  let pass_per = GetWeekInterval(row.date,new Date().getTime())/GetWeekInterval(row.date, row.period)*100
   //实际时长/已过时长，单位:周 
-  let work_per = GetWorkPass()/GetWeekPass(row.date)*100
+  let work_per = row.progressing/GetWeekInterval(row.date,new Date().getTime())*100
   let highlight:boolean = false;
 
   pass_per = pass_per>100?(highlight=true,100):Math.trunc(pass_per)
@@ -182,6 +328,114 @@ function RowStyleCalc({ row, rowIndex }):any
                                   var(--color-background) 100%)`
     } 
   }
+}
+
+/************************* 表单编辑相关 **********************************/
+/// 编辑表单开关
+let isedit:Ref<boolean> = ref(false)
+
+/* 输入编辑内容 */
+let form_data:Ref<ItemData|undefined> = ref(undefined);
+
+/**
+ * 获取表单变更信息
+ * @param data 
+ */
+async function formSubmit(data:ItemData)
+{
+    isedit.value = false;
+
+    //更新表单,包括后台提交，以及前台填充
+    if(data)
+    {
+      let flag:boolean = false;
+      //TODO:计算值
+      PutItems(data).then((ret:boolean)=>{
+        if(ret)
+        {
+          //遍历uuid
+          for(const i in tableData.value)
+          {
+            if(tableData.value[i].uuid == data.uuid)
+            {
+              tableData.value[i] = _.cloneDeep(data);
+              flag = true;
+              ElMessage.success("项目编辑成功");
+            }
+          }
+
+          if(!flag)
+          {
+            tableData.value.push(data);
+            ElMessage.success("项目添加成功");
+          }
+        }
+        else
+        {
+          ElMessage.success("项目添加/编辑失败");
+        }
+      }).catch((err)=>{
+        ElMessage.error(err.message)
+      })
+    }
+}
+
+/**
+ * 编辑当前选择的项目信息
+ */
+function formDataEdit(data:ItemData)
+{
+  form_data.value= _.cloneDeep(data)
+  isedit.value = true;
+}
+
+/**
+ * 新增项目
+ */
+function formDataAdd()
+{
+  form_data.value= undefined
+  isedit.value = true;
+}
+
+/**
+ * 删除当前选择的项目信息
+ */
+
+function formDataDel(uuid:string)
+{
+  //遍历uuid
+  DelItems(uuid).then((ret:boolean)=>{
+    if(ret)
+    {
+      for(const i in tableData.value)
+      {
+        if(tableData.value[i].uuid == uuid)
+        {
+          tableData.value.splice(Number(i),1);
+          ElMessage.success("项目删除成功");
+          break;
+        }
+      }
+    }
+    else
+    {
+      ElMessage.error("删除项目失败");
+    }
+  }).catch((err)=>{
+    ElMessage.error(err.message)
+  })
+}
+
+/************************* 表单导出相关 **********************************/
+let isexport:Ref<boolean> = ref(false)
+let isquick:Ref<boolean> = ref(false)
+
+/// 打开表单导出
+function formDataExport(quick:boolean)
+{
+  isquick.value = quick;
+  isexport.value = true;
 }
 
 </script>
@@ -228,7 +482,16 @@ function RowStyleCalc({ row, rowIndex }):any
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 5rem
+  height: 5rem;
+  background-color: #5470c6;
+
+.el-col
+  display: flex;
+  justify-content: center;
+
+.text
+  white-space: pre-wrap !important
+  word-wrap: break-word !important
 
 </style>
 

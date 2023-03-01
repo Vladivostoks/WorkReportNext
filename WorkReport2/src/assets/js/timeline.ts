@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import type { ItemData } from "./itemtable";
 
 export enum ItemStatus {
   normal="执行中",
@@ -109,3 +110,8 @@ export async function RpcDeleteTimeline(uuid:string, index:number):Promise<boole
     return ret;
 }
 
+//TODO:根据时间线填充获取计算值
+export function ItemDataCacl(data:ItemData)
+{
+    
+}

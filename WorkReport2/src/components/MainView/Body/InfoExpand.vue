@@ -4,7 +4,7 @@
     <el-descriptions-item label="区域/阶段">
       {{ prop.data.area }}
     </el-descriptions-item>
-    <el-descriptions-item label="子类型">
+    <el-descriptions-item label="项目子类型">
       <el-tag class="mx-1" size="small"
               :key="iter" v-for="iter in prop.data.subtype" type="warning">{{ iter }}</el-tag>
     </el-descriptions-item>
@@ -19,7 +19,7 @@
       <el-link @click="CopyUrl">{{ prop.data?.url }}</el-link>
     </el-descriptions-item>
   </el-descriptions>
-  <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" editable 
+  <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" :editable="!(viewback || mode==TableContentType.HistoryItem)"
             @statusChange="(status)=>{emit('update:status', status)}"/>
 </el-card>
 </template>
@@ -29,22 +29,28 @@ import { DocumentCopy,
 } from '@element-plus/icons-vue'
 import type { ItemStatus } from "@/assets/js/timeline"
 import Timeline from "@/components/MainView/Body/TimeLine.vue"
-import { computed, ref, type ComputedRef,  } from "vue"
+import { computed, inject, ref, type ComputedRef,  } from "vue"
 import type { Ref,  } from "vue"
 import { ElMessage } from 'element-plus'
 import type { ItemData } from '@/assets/js/itemtable'
-import { GetWeekPass } from '@/assets/js/common'
+import { GetWeekInterval } from '@/assets/js/common'
+import { TableContentType } from '@/assets/js/types'
  
 export interface DetailInfo {
   status: ItemStatus,
   data: ItemData,
 };
-
 const prop = defineProps<DetailInfo>()
 const emit = defineEmits(['update:status'])
 
+const viewback = inject('viewback');
+const mode = inject('mode');
+
 const time_compare:ComputedRef<string> = computed(():string=>{
-  return String(GetWeekPass(prop.data.date))+"周/"+String(prop.data.period)+"周"
+  //实际开发时长/预期总时长，单位:周
+  let pass_per = prop.data.progressing/GetWeekInterval(prop.data.date, prop.data.period)*100
+
+  return String(GetWeekInterval(prop.data.date,new Date().getTime()))+"周/"+String(GetWeekInterval(prop.data.date, prop.data.period))+"周("+pass_per+"%)"
 })
 
 function CopyUrl()

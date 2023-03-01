@@ -23,6 +23,7 @@
             <!-- 显示登陆界面 -->
             <LoginCard v-else-if="user_info.user_status == USER_STATUS.k_nologin"/>
             <!-- 显示初始化信息 -->
+            <SuperInit v-else-if="user_info.user_status == USER_STATUS.k_noinit"/>
             <div v-else>
             </div>
         </div>
@@ -53,10 +54,13 @@ import type { UserCheckResult } from '@/assets/js/login';
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 import UserInfoCard from '@/components/LoginView/UserInfo.vue'
 import LoginCard from '@/components/LoginView/Login.vue'
+import { TableContentType } from '@/assets/js/types';
+import SuperInit from '@/components/LoginView/SuperInit.vue'
 
 
 let user_info = UserInfo()
 const router = useRouter()
+const cookies = useCookies(['user_name', 'user_ip', 'user_status']);
 
 onMounted(async () => {
     //step1: 后台判断系统是否初始化
@@ -75,8 +79,11 @@ onMounted(async () => {
                 user_info.user_name = user_res.user_name;
                 user_info.user_ip   = user_res.user_ip;
                 user_info.user_status = USER_STATUS.k_logined;
-                // TODO：更新cookie
-                const cookies = useCookies(['locale'])
+                
+                // 更新cookie
+                cookies.set('user_name', user_info.user_name);
+                cookies.set('user_ip', user_info.user_ip);
+                cookies.set('user_status', user_info.user_status);
             }
         })
     }
@@ -85,7 +92,7 @@ onMounted(async () => {
 function route():void {
     //进行路由跳转
     // alert("账号登陆：" + user_info.user_name);
-    router.push({ name: 'items'})
+    router.push({ path: '/items/'+TableContentType.NewItem})
 }
 
 </script>

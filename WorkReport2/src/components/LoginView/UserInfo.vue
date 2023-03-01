@@ -31,6 +31,9 @@
 
 <script setup lang="ts">
 import { UserInfo, USER_STATUS } from '@/stores/counter';
+import { useCookies } from '@vueuse/integrations/useCookies'
+
+const cookies = useCookies(['user_name', 'user_ip', 'user_status']);
 
 const user_info = UserInfo()
 function UserEnter():void{
@@ -39,6 +42,9 @@ function UserEnter():void{
 
 function UserUnbind():void{
     user_info.user_status = USER_STATUS.k_nologin
+    cookies.remove('user_name')
+    cookies.remove('user_ip')
+    cookies.remove('user_status')
 }
 
 </script>
@@ -50,9 +56,9 @@ function UserUnbind():void{
     margin-right: 10px
     
 .el-card
-    >>> .el-card__header
+    :deep() .el-card__header
         height: 80%
-    >>> .el-card__body
+    :deep() .el-card__body
         display: grid
         grid-row-gap: 3px;
         button

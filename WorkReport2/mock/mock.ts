@@ -7,7 +7,8 @@ let user_check_api:MockMethod = {
     console.dir(query)
     if(query?.ischeck_super)
     {
-      return { hasSuperUser: true }
+      // return { hasSuperUser: true }
+      return { hasSuperUser: false }
     }
     else
     {

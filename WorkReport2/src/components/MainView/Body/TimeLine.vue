@@ -51,7 +51,7 @@
           <el-form-item label="实施内容" prop="progress">
               <el-input
               type="textarea"
-              size="medium"
+              size="small"
               v-model="new_timeline.progress"
               :autosize="{ minRows: 2, maxRows: 5}"
               placeholder="输入项目进度记录实施内容"
@@ -61,7 +61,7 @@
           <el-form-item label="实施结果" prop="result">
               <el-input
               type="textarea"
-              size="medium"
+              size="small"
               v-model="new_timeline.result"
               :autosize="{ minRows: 2, maxRows: 5}"
               placeholder="输入项目进度记录实施结果"
@@ -129,7 +129,7 @@ import { Edit,
          Close,
          Connection, 
 } from '@element-plus/icons-vue'
-import { computed, onMounted, reactive, ref } from "vue"
+import { computed, inject, onMounted, reactive, ref } from "vue"
 import type { Ref } from "vue"
 import { useNow, useDateFormat } from '@vueuse/core'
 import _ from 'lodash'
@@ -155,16 +155,16 @@ const prop = defineProps<TimelineParam>()
 // 提供外部监听的项目状态
 const emit = defineEmits(['statusChange'])
 
-
 const TimelineStatusMap:{
   [key:string]:TimelineStatus
 } = {
-  "执行中" : "normal",
+  "执行中" : "process",
   "已交付" : "finish",
   "已完成" : "success",
   "已终止" : "error",
   "暂停中" : "wait",
 }
+
 const NameStatusMap:{
   [key:string]:NameStatus
 } = {

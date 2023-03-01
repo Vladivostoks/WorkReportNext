@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import MainView from '@/views/MainView.vue'
+import InfoTable from '@/components/MainView/Body/InfoTable.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,7 +14,11 @@ const router = createRouter({
     {
       path: '/items',
       name: 'items',
-      component: MainView
+      component: MainView,
+      // props: (route)=>{return route.params;},
+      children: [
+        { path: ':tableMode', component: InfoTable}, 
+      ]
     },
   ]
 })

@@ -93,6 +93,7 @@
     
 <script lang="ts" setup>
 import { utils } from 'xlsx'
+// @ts-ignore 
 import xlstyle from 'xlsx-style-vite'
 import { computed, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, reactive, ref, watch, type Ref } from 'vue'
 import type { BaseItemData, ExpandItemData, ItemData } from "@/assets/js/itemtable"

@@ -3,7 +3,7 @@
 import axios, { AxiosError } from 'axios'
 
 export enum USER_TYPE{
-    super = "super",
+    super = "administrators",
     manager = "controller",
     normalize = "normalizer"
 };
@@ -31,10 +31,7 @@ async function hasSuperUser():Promise<boolean>
         params: {"ischeck_super":true}
     }).then((res) => {
         //没有用户则开启对话框生成超级用户
-        if(res.data?.hasSuperUser)
-        {
-            ret = true;
-        }
+        ret = res.data.ret
     }).catch((res)=>{
         console.dir(res);
         throw new AxiosError(res);        
@@ -145,7 +142,7 @@ async function userAdd(name:string,passwd:string,usertype:USER_TYPE):Promise<boo
 {
     let ret:boolean = false;    
 
-    axios({
+    await axios({
         url:'/user',
         method: 'put',
         timeout: 5000,
@@ -157,6 +154,7 @@ async function userAdd(name:string,passwd:string,usertype:USER_TYPE):Promise<boo
         data: {
           username: name,
           passwd: passwd,
+        //   passwd: CryptoJS.SHA256(passwd).toString(),
           prop: usertype,
         }
     }).then((res) => {

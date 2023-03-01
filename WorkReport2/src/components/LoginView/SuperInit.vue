@@ -34,6 +34,7 @@ import { reactive, ref, type Ref } from 'vue';
 import { userAdd, USER_TYPE } from '@/assets/js/login';
 import type { FormRules } from 'element-plus/es/tokens/form';
 import { ElMessage, type FormInstance } from 'element-plus'
+import { UserInfo, USER_STATUS } from '@/stores/counter';
 
 let passwd:{
   first:string,
@@ -80,6 +81,7 @@ function ConfirmPasswd(rule: any, value: any, callback: any){
 }
 
 const rule_form = ref<FormInstance>()
+const user_info = UserInfo()
 function SystemInit(formEl: FormInstance | undefined){
   if (!formEl) return
   formEl.validate(async (valid) => {
@@ -89,10 +91,16 @@ function SystemInit(formEl: FormInstance | undefined){
       }
       else
       {
-        const ret = await userAdd('admin', passwd.first, USER_TYPE.super)
-        if(ret)
-        {
-          ElMessage.success("系统初始化成功，请记住管理员密码");
+        try{
+          const ret = await userAdd('admin', passwd.first, USER_TYPE.super)
+          if(ret)
+          {
+            ElMessage.success("系统初始化成功，请记住管理员密码");
+            user_info.user_status = USER_STATUS.k_nologin;
+          }
+        }
+        catch (err:any){
+          ElMessage.error(err);
         }
       }
     }

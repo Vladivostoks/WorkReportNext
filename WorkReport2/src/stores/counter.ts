@@ -23,6 +23,6 @@ export const UserInfo = defineStore('UserInfo', () => {
   const user_ip:Ref<string> = ref("127.0.0.1")
   const user_name:Ref<string> = ref("未登陆")
   const user_status:Ref<USER_STATUS> = ref(USER_STATUS.k_nologin)
-
-  return { user_ip, user_name, user_status }
+  const user_group:Ref<string> = ref("默认组")
+  return { user_ip, user_name, user_status, user_group }
 })

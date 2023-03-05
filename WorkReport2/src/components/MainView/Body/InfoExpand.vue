@@ -19,7 +19,7 @@
       <el-link @click="CopyUrl">{{ prop.data?.url }}</el-link>
     </el-descriptions-item>
   </el-descriptions>
-  <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" :editable="!(viewback || mode==TableContentType.HistoryItem)"
+  <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" :start_time="prop.data.date" :end_time="end_time" :editable="!(viewback || mode==TableContentType.HistoryItem)"
             @statusChange="(status)=>{emit('update:status', status)}"/>
 </el-card>
 </template>
@@ -45,12 +45,23 @@ const emit = defineEmits(['update:status'])
 
 const viewback = inject('viewback');
 const mode = inject('mode');
+const baseTime:Ref<number> = inject('baseTime') as Ref<number>;
+
+const end_time:ComputedRef<number> = computed(():number=>{
+  const date:Date = new Date(baseTime.value as number)
+  const start:number = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay()).getTime();
+  const end:number = start+ 3600 * 1000 * 24 * 7;
+
+  return end
+})
 
 const time_compare:ComputedRef<string> = computed(():string=>{
   //实际开发时长/预期总时长，单位:周
-  let pass_per = prop.data.progressing/GetWeekInterval(prop.data.date, prop.data.period)*100
+  const interval = GetWeekInterval(prop.data.date, prop.data.period)
+  const pass_per = Math.round(prop.data.progressing/(interval<=0?1:interval)*100)
+  const pass_interval = GetWeekInterval(prop.data.date,new Date().getTime());
 
-  return String(GetWeekInterval(prop.data.date,new Date().getTime()))+"周/"+String(GetWeekInterval(prop.data.date, prop.data.period))+"周("+pass_per+"%)"
+  return String(pass_interval<=0?1:pass_interval)+"周/"+String(GetWeekInterval(prop.data.date, prop.data.period))+"周("+pass_per+"%)"
 })
 
 function CopyUrl()

@@ -9,13 +9,13 @@ default-active="2"
             <el-icon><Finished/></el-icon>
             <span>项目管理</span>
         </template>
-        <router-link :to="{path:'/items/'+TableContentType.NewItem}">
+        <router-link :to="{name: 'table', params: { tableMode:TableContentType.NewItem}}">
             <el-menu-item index="1-1">本周新增</el-menu-item>
         </router-link>
-        <router-link :to="{path:'/items/'+TableContentType.LeftItem}">
+        <router-link :to="{name: 'table', params: { tableMode:TableContentType.LeftItem}}">
             <el-menu-item index="1-2">未完成</el-menu-item>
         </router-link>
-        <router-link :to="{path:'/items/'+TableContentType.HistoryItem}">
+        <router-link :to="{name: 'table', params: { tableMode:TableContentType.HistoryItem}}">
             <el-menu-item index="1-3">已完成</el-menu-item>
         </router-link>
     </el-sub-menu>
@@ -24,7 +24,7 @@ default-active="2"
             <el-icon><MessageBox /></el-icon>
             <span>项目归档</span>
         </template>
-        <router-link :to="{path:'/items/'+TableContentType.Repository}">
+        <router-link :to="{name: 'table', params: { tableMode:TableContentType.Repository}}">
             <el-menu-item index="0-1">归档记录</el-menu-item>
         </router-link>
     </el-sub-menu>

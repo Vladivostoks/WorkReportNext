@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import type { ItemStatus } from "./timeline";
+import { ItemStatus } from "./timeline";
 
 //项目基础信息
 export interface BaseItemData {
@@ -71,6 +71,13 @@ export async function GetItems(start_time:number,
             isupdatetime: isupdatetime,
         }
     }).then((res) => {
+        for(let iter in res.data)
+        {
+            if(res.data[iter].status == "")
+            {
+                res.data[iter].status = ItemStatus.noinit
+            }
+        }
         ret = res.data;
     }).catch((err)=>{
         throw new AxiosError(err);        

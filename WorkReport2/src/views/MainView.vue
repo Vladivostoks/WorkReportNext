@@ -47,16 +47,16 @@ onBeforeMount(()=>{
 })
 
 onMounted(()=>{
-    //设置cookie检查定时器
-    // self.setInterval(()=>{
-    //     if(!cookies.get('user_name')
-    //     || !cookies.get('user_ip')
-    //     || !cookies.get('user_status'))
-    //     {
-    //         //回到注册页
-    //         router.push({ name: 'login'})
-    //     }
-    // },1000);
+    // 设置cookie检查定时器
+    self.setInterval(()=>{
+        if(!cookies.get('user_name')
+        || !cookies.get('user_ip')
+        || !cookies.get('user_status'))
+        {
+            //回到注册页
+            router.push({ name: 'login'})
+        }
+    },1000);
 })
 
 </script>

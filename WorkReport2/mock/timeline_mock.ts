@@ -5,28 +5,28 @@ let timeline_get_api = {
   method: 'get',
   response: () => {
     //核验body
-      return { ret:true, 
-               timeline:[{
+      return []
+      return [{
                  timestamp: new Date().getTime(),
                  progress: "1. 完成测试1\r\n2. 完成测试2\r\n",
                  result: "1. 已完成\r\n2. 已完成",
                  status: "已完成",
                  timeused: 1,
-                 author: "舒正阳",
+                 author: "Ayden",
                },{
                  timestamp: new Date().getTime(),
                  progress: "1. 完成测试1\r\n2. 完成测试2\r\n",
                  result: "1. 已完成\r\n2. 已完成",
                  status: "已终止",
                  timeused: 2,
-                 author: "舒正阳",
+                 author: "Ayden",
                },{
                  timestamp: new Date().getTime(),
                  progress: "1. 完成测试1\r\n2. 完成测试2\r\n",
                  result: "1. 已完成\r\n2. 已完成",
                  status: "已交付",
                  timeused: 3,
-                 author: "舒正阳",
+                 author: "Ayden",
                },{
                  timestamp: new Date().getTime(),
                  progress: "1. 完成测试1\r\n2. 完成测试2\r\n",
@@ -40,16 +40,15 @@ let timeline_get_api = {
                  result: "1. 已完成\r\n2. 已完成",
                  status: "暂停中",
                  timeused: 5,
-                 author: "舒正阳",
+                 author: "Ayden",
                },{
                  timestamp: new Date().getTime(),
                  progress: "1. 完成测试1\r\n2. 完成测试2\r\n",
                  result: "1. 已完成\r\n2. 已完成",
                  status: "暂停中",
                  timeused: 6,
-                 author: "舒正阳",
+                 author: "Ayden",
                }]
-              }
   }
 }
 

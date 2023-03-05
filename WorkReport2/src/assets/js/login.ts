@@ -10,6 +10,7 @@ export enum USER_TYPE{
 
 export interface UserCheckResult{
     user_name:  string,     ///< 用户名称 
+    user_group:  string,    ///< 用户组
     user_ip:    string,     ///< 用户类型ip   
     user_lv:    USER_TYPE,  ///< 用户类型
     user_token: string,     ///< 会话token
@@ -57,12 +58,11 @@ async function userCheck():Promise<UserCheckResult|boolean>
         responseType: 'json',
         responseEncoding: 'utf8', 
     }).then((res) => {
-        //TODO: 支持check失败
-        if(res.data) {
-            ret = res.data
+        if(!res.data?.ret) {
+            ret = false;
         }
         else {
-            ret = false;
+            ret = res.data
         }
     }).catch((res)=>{
         console.dir(res);
@@ -80,12 +80,14 @@ async function usernameSuggest(input:string):Promise<string[]>
     let ret:string[] = []
     
     await axios({
-        url:'/username',
-        method: 'get',
+        url:'/user',
+        method: 'post',
         timeout: 2000,
         responseType: 'json',
         responseEncoding: 'utf8', 
-        params: input
+        data: {
+            username:input
+        }
     }).then((res) => {
         ret = res.data
     }).catch((res)=>{
@@ -101,11 +103,14 @@ async function usernameSuggest(input:string):Promise<string[]>
  * @param name 
  * @returns 
  */
-async function userLogin(name:string):Promise<{ ret:boolean, ip:string }>
+async function userLogin(name:string):Promise<UserCheckResult|boolean>
 {
-    let ret:{ ret:boolean, ip:string } = {
-        ret: false,
-        ip: "0.0.0.0"
+    let ret:UserCheckResult|boolean = {
+        user_name: "",
+        user_ip:   "",
+        user_lv:    USER_TYPE.normalize,
+        user_token: "",
+        user_group: "",
     };
 
     //核验登陆
@@ -118,11 +123,17 @@ async function userLogin(name:string):Promise<{ ret:boolean, ip:string }>
         headers: {
             'Content-Type': 'application/json;charset=UTF-8'
         },
-        data:name
+        data:{
+            username:name,
+            passwd: "",
+        }
     }).then((res) => {
-        console.dir(res);
-        ret.ret = res.data?.ret;
-        ret.ip = res.data?.ip
+        if(!res.data?.ret) {
+            ret = false;
+        }
+        else {
+            ret = res.data
+        }
     }).catch((res)=>{
         console.dir(res);
         throw new AxiosError(res);        

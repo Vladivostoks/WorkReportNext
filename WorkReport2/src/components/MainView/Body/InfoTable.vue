@@ -191,6 +191,7 @@ const tableData:Ref<ItemData[]> = ref([])
 /// 项目表格的可编辑状态需要同步注入子组件，和时间线组件同步
 provide('viewback', viewback);
 provide('mode', mode);
+provide('baseTime', baseTime);
 
 /// 过滤相关操作
 type List = {
@@ -289,6 +290,7 @@ function RowStyleCalc({ row, rowIndex }:{row:ItemData, rowIndex:number}):any
   const PerStatusMap:{
     [key:string]:string
   } = {
+    "未开始" : "normal",
     "执行中" : "normal",
     "已交付" : "finish",
     "已完成" : "success",
@@ -300,9 +302,12 @@ function RowStyleCalc({ row, rowIndex }:{row:ItemData, rowIndex:number}):any
    * 计算总时长,已过时间,实际工作时长，之间的占比
    */
   //已过时长/总时长，单位:周
-  let pass_per = GetWeekInterval(row.date,new Date().getTime())/GetWeekInterval(row.date, row.period)*100
+  const except_interval = GetWeekInterval(row.date, row.period)
+  const pass_interval = GetWeekInterval(row.date,new Date().getTime())
+  // TODO:需要判断时间基准
+  let pass_per = GetWeekInterval(row.date,new Date().getTime())/(except_interval<=0?1:except_interval)*100
   //实际时长/已过时长，单位:周 
-  let work_per = row.progressing/GetWeekInterval(row.date,new Date().getTime())*100
+  let work_per = row.progressing/(pass_interval<=0?1:pass_interval)*100
   let highlight:boolean = false;
 
   pass_per = pass_per>100?(highlight=true,100):Math.trunc(pass_per)

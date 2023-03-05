@@ -20,7 +20,7 @@ let form_option_get_api:MockMethod = {
             name: "测试项目",
             type: "问题反馈",
             describe: "这是一个测试项目",
-            person: ["舒正阳"],
+            person: ["Ayden"],
 
             link_person:["测试人员"],
             area: "杭州",
@@ -38,7 +38,7 @@ let form_option_get_api:MockMethod = {
             name: "测试项目2",
             type: "新增需求",
             describe: "这是一个测试项目",
-            person: ["舒正阳"],
+            person: ["Ayden"],
 
             link_person:["测试人员"],
             area: "杭州",
@@ -56,7 +56,7 @@ let form_option_get_api:MockMethod = {
             name: "测试项目3",
             type: "新增需求",
             describe: "这是一个测试项目",
-            person: ["舒正阳"],
+            person: ["Ayden"],
 
             link_person:["测试人员"],
             area: "杭州",

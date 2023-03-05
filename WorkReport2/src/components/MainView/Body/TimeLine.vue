@@ -146,6 +146,10 @@ export type NameStatus = "success"|"info"|"warning"|"danger"|""
 export interface TimelineParam {
   // 具体项目uuid信息,根据uuid查询数据库中项目的时间线
   uuid:string,
+  // 时间线起始时间
+  start_time: number,
+  // 时间线结束时间
+  end_time: number,
   // 是否可编辑
   editable?:boolean,
 }
@@ -179,7 +183,7 @@ const NameStatusMap:{
 let view_timeline_data:Ref<TimelineInfo[]> = ref([])
 
 onMounted(()=>{
-  RpcGetTimeline(prop.uuid).then((res:TimelineInfo[])=>{
+  RpcGetTimeline(prop.uuid,prop.start_time,prop.end_time).then((res:TimelineInfo[])=>{
     view_timeline_data.value = _.cloneDeep(res);
     _.reverse(view_timeline_data.value)
     emit('statusChange', view_timeline_data.value[0]?.status?view_timeline_data.value[0].status:ItemStatus.noinit);

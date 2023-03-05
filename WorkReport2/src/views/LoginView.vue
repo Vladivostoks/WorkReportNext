@@ -79,11 +79,13 @@ onMounted(async () => {
                 user_info.user_name = user_res.user_name;
                 user_info.user_ip   = user_res.user_ip;
                 user_info.user_status = USER_STATUS.k_logined;
+                user_info.user_group = user_res.user_group
                 
                 // 更新cookie
                 cookies.set('user_name', user_info.user_name);
                 cookies.set('user_ip', user_info.user_ip);
                 cookies.set('user_status', user_info.user_status);
+                cookies.set('user_group', user_info.user_group);
             }
         })
     }
@@ -92,7 +94,8 @@ onMounted(async () => {
 function route():void {
     //进行路由跳转
     // alert("账号登陆：" + user_info.user_name);
-    router.push({ path: '/items/'+TableContentType.NewItem})
+    // router.push({ path: '/items/'+TableContentType.NewItem})
+    router.push({ name: 'table', params: { tableMode: TableContentType.NewItem } })
 }
 
 </script>

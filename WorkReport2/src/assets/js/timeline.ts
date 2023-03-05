@@ -30,7 +30,7 @@ export interface TimelineInfo{
  * @param uuid 
  * @param index 
  */
-export async function RpcGetTimeline(uuid:string):Promise<TimelineInfo[]>
+export async function RpcGetTimeline(uuid:string, start_time:number, end_time:number):Promise<TimelineInfo[]>
 {
     let ret:TimelineInfo[] = [];
 
@@ -40,8 +40,12 @@ export async function RpcGetTimeline(uuid:string):Promise<TimelineInfo[]>
         timeout: 5000,
         responseType: 'json',
         responseEncoding: 'utf8', 
+        params: {
+            start_time: start_time,
+            end_time: end_time,
+        }
     }).then((res)=>{
-        ret = res.data.timeline
+        ret = res.data
     }).catch((res)=>{
         console.dir(res);
         throw new AxiosError(res);        

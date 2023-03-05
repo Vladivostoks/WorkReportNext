@@ -137,7 +137,7 @@
         />
       </el-select>
     </el-form-item>
-    <el-form-item label="完成时间" prop="period">
+    <el-form-item label="预计完成时间" prop="period">
       <el-date-picker v-model="form.period" value-format="x" type="date" :disabled="prop.data?true:false"/>
     </el-form-item>
     <el-form-item label="项目路径" prop="url">

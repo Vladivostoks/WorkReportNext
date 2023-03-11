@@ -149,7 +149,7 @@ async function userLogin(name:string):Promise<UserCheckResult|boolean>
  * @param usertype 
  * @returns 
  */
-async function userAdd(name:string,passwd:string,usertype:USER_TYPE):Promise<boolean>
+async function userAdd(name:string,passwd:string,usertype:USER_TYPE,usergroup:string="default"):Promise<boolean>
 {
     let ret:boolean = false;    
 
@@ -167,6 +167,7 @@ async function userAdd(name:string,passwd:string,usertype:USER_TYPE):Promise<boo
           passwd: passwd,
         //   passwd: CryptoJS.SHA256(passwd).toString(),
           prop: usertype,
+          group: usergroup,
         }
     }).then((res) => {
         ret = res.data;

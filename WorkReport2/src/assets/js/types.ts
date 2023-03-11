@@ -4,7 +4,7 @@ export enum TableContentType{
   NewItem="NewItem",
   // 往期遗留
   LeftItem="LeftItem",
-  // 历史记录
+  // 已完成
   HistoryItem="HistoryItem",
   // 项目归档
   Repository="Repository",

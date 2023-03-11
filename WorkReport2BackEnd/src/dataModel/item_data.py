@@ -3,6 +3,7 @@ from pprint import pprint
 import sqlite3
 import datetime
 import json
+import logging
 
 from dataModel.affairs_data import dict_factory
 from config.backend_conf import LIST_DATA_DB,ITEM_LIST_TABLE
@@ -76,7 +77,7 @@ class ItemList(object):
             cursor = self.__db.cursor()
             cursor.execute(self.__CREAT_ITEM_LIST_TABLE % {"item_list_table":self.__table_name})
             cursor.close()
-        except Exception as e:
+        except sqlite3.Error as e:
             pprint(e)
 
         self.__db.commit()
@@ -105,7 +106,7 @@ class ItemList(object):
                                               "startTime": startTime,
                                               "endTime": endTime,
                                               "linkAffairs": json.dumps(linkAffairs)})
-        except Exception as e:
+        except sqlite3.Error as e:
             pprint(e)
             return False
 
@@ -120,7 +121,7 @@ class ItemList(object):
             cursor.execute(self.__DELETE_ITEM % {"item_list_table":self.__table_name,
                                                  "id":id})
             cursor.close()
-        except Exception as e:
+        except sqlite3.Error as e:
             pprint(e)
             return False
 
@@ -140,7 +141,7 @@ class ItemList(object):
                 item["linkAffairs"] = json.loads(item["linkAffairs"])
                 if item["dutyPersons"]!=None and item["dutyPersons"]!="":
                     item["dutyPersons"] = item["dutyPersons"].split(",")
-        except Exception as e:
+        except sqlite3.Error as e:
             pprint(e)
 
         return result
@@ -159,7 +160,7 @@ class ItemList(object):
                 item["linkAffairs"] = json.loads(item["linkAffairs"])
                 if item["dutyPersons"]!=None and item["dutyPersons"]!="":
                     item["dutyPersons"] = item["dutyPersons"].split(",")
-        except Exception as e:
+        except sqlite3.Error as e:
             pprint(e)
 
         return result

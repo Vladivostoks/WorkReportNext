@@ -88,7 +88,7 @@ export async function RpcPushTimeline(uuid:string, data:TimelineInfo):Promise<bo
  * @param index 删除此项目id的第x个时间线
  * @returns 
  */
-export async function RpcDeleteTimeline(uuid:string, index:number):Promise<boolean>
+export async function RpcDeleteTimeline(uuid:string, timestamp:number):Promise<boolean>
 {
     let ret:boolean = false;
     
@@ -102,7 +102,7 @@ export async function RpcDeleteTimeline(uuid:string, index:number):Promise<boole
                 'Content-Type': 'application/json;charset=UTF-8'
         },
         data:{
-            index: index
+            timestamp: timestamp
         }
     }).then((res) => {
         ret = res.data.ret;

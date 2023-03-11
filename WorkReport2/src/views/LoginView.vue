@@ -79,7 +79,8 @@ onMounted(async () => {
                 user_info.user_name = user_res.user_name;
                 user_info.user_ip   = user_res.user_ip;
                 user_info.user_status = USER_STATUS.k_logined;
-                user_info.user_group = user_res.user_group
+                user_info.user_group = user_res.user_group;
+                user_info.user_lv = user_res.user_lv;
                 
                 // 更新cookie
                 cookies.set('user_name', user_info.user_name);

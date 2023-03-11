@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*- 
 import sqlite3
 import pprint
+import logging
 
 from dataModel.model_version import DataModel
 
@@ -60,8 +61,8 @@ class UserData(DataModel):
                 cursor.execute(f"ALTER TABLE {self.__table_name} ADD COLUMN user_group TEXT;")
                 cursor.close()
                 self.__db.commit()
-            except Exception as e:
-                pprint.pprint(e)
+            except sqlite3.Error as e:
+                logging.error(e)
             ret=True
 
         #return __update_V1_0_2(local_verisons)
@@ -89,14 +90,14 @@ class UserData(DataModel):
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
     def __del__(self):
         self.__db.close()
 
     #添加用户
-    def user_add(self,username,prop,passwd,group):
+    def user_add(self,username,prop,passwd,group=None):
         try:
             cursor = self.__db.cursor()
             cursor.execute(self.__INSERT_USER % {"user_table":self.__table_name,
@@ -108,8 +109,8 @@ class UserData(DataModel):
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -124,8 +125,8 @@ class UserData(DataModel):
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -143,8 +144,8 @@ class UserData(DataModel):
             result = cursor.fetchone()
             cursor.close()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
         if result == None:
             #无此用户
@@ -174,8 +175,8 @@ class UserData(DataModel):
             result = cursor.fetchall()
 
             cursor.close()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
         if len(result)<=0:
             # 缺少超级用户
@@ -200,8 +201,8 @@ class UserData(DataModel):
             result = cursor.fetchall()
 
             cursor.close()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
         return [item["user_name"] for item in result]
 
@@ -222,8 +223,8 @@ class UserData(DataModel):
             result = cursor.fetchall()
 
             cursor.close()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
         return result[0] if len(result)>0 else False
 

@@ -2,11 +2,26 @@
 /**
  * 计算时间戳为当年的第几周
  * @param timestamp 毫秒时间戳
- * @returns 周
+ * @returns 周，年
  */
-export function GetWeekIndex(timestamp:number):number
+export function GetWeekIndex(timestamp:number):number[]
 {
-    return Math.ceil((timestamp - new Date(new Date().getFullYear(),0,0).getTime())/1000/60/60/24/7);
+    // 获取当前日期
+    const date = new Date(timestamp);
+    // 获取当前日期是星期几（0-6）
+    const day = date.getDay();
+    // 获取当前日期是哪一年
+    const year = date.getFullYear();
+    // 获取当年1月1日的日期
+    const firstDay = new Date(year, 0, 1);
+    // 获取当前日期距离当年第一天的天数
+    const diffDays = Math.floor((date.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24));
+    // 计算目标日期距离该年第一周第一天的天数（假设星期日为每周第一天）
+    const offsetDays = diffDays + firstDay.getDay();
+    // 计算目标日期是该年第几周（向上取整）
+    const weekNumber = Math.ceil(offsetDays / 7);
+
+    return [weekNumber, year];
 }
 
 /**

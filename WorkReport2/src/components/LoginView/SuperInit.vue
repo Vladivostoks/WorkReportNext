@@ -4,7 +4,7 @@
     <template #header>
       <h1> 初始化系统 </h1>
       <div>
-        <el-form label-position="left" ref="rule_form" label-width="6em" :model="passwd" :rules="rules">
+        <el-form label-position="left" ref="rule_form" label-width="7em" :model="passwd" :rules="rules">
             <el-form-item label="管理密码" prop="first">
                 <el-input
                     v-model="passwd.first"
@@ -17,6 +17,12 @@
                     v-model="passwd.confirm"
                     placeholder="再次输入管理员密码"
                     show-password
+                />
+            </el-form-item>
+            <el-form-item label="初始用户名" prop="first_user">
+                <el-input
+                    v-model="passwd.first_user"
+                    placeholder="创建系统的第一个管理用户"
                 />
             </el-form-item>
         </el-form>
@@ -39,9 +45,11 @@ import { UserInfo, USER_STATUS } from '@/stores/counter';
 let passwd:{
   first:string,
   confirm:string,
+  first_user:string,
 } = reactive({
   first: "",
   confirm:"",
+  first_user:"",
 })
 
 const rules = reactive<FormRules>({
@@ -54,6 +62,12 @@ const rules = reactive<FormRules>({
   confirm:[{
     required: true,
     validator: ConfirmPasswd,
+    trigger: 'blur',
+  }],
+
+  first_user:[{
+    required: true,
+    validator: ConfirmFirstUser,
     trigger: 'blur',
   }],
 })
@@ -80,6 +94,18 @@ function ConfirmPasswd(rule: any, value: any, callback: any){
   }
 }
 
+function ConfirmFirstUser(rule: any, value: any, callback: any){
+  let reg1 = /^[\u4e00-\u9fa5]+[0-9]*$/;
+  if(!reg1.test(value))
+  {
+    callback(new Error('用户名必须是中文开头包含中文或者数字'))
+  }
+  else
+  {
+    callback();
+  }
+}
+
 const rule_form = ref<FormInstance>()
 const user_info = UserInfo()
 function SystemInit(formEl: FormInstance | undefined){
@@ -93,6 +119,7 @@ function SystemInit(formEl: FormInstance | undefined){
       {
         try{
           const ret = await userAdd('admin', passwd.first, USER_TYPE.super)
+          && await userAdd(passwd.first_user, "", USER_TYPE.manager)
           if(ret)
           {
             ElMessage.success("系统初始化成功，请记住管理员密码");

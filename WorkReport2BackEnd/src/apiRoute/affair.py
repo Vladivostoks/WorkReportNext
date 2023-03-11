@@ -34,9 +34,9 @@ class AffairsContent(Resource):
     #删除一条事务记录
     def delete(self, affair_id):
         put_parser = reqparse.RequestParser()
-        put_parser.add_argument('index', dest='index',
+        put_parser.add_argument('timestamp', dest='timestamp',
                                 type=int, location='json',
-                                required=True, help='Need input index for delete from affair content.')
+                                required=True, help='Need input timestamp for delete from affair content.')
         req = put_parser.parse_args()
 
         AFFAIR_CONTENT_DATA_DB_LOCK.acquire()
@@ -45,9 +45,9 @@ class AffairsContent(Resource):
         AFFAIR_CONTENT_DATA_DB_LOCK.release()
 
         if not ret:
-            return '{"message":"删除失败"}', 200
+            return {"ret":False, "message":"删除失败"}, 200
         else:
-            return '{"message":"删除成功"}', 200
+            return {"ret":True, "message":"删除成功"}, 200
     
     #完成事务的修改和添加
     def post(self, affair_id):
@@ -60,35 +60,35 @@ class AffairsContent(Resource):
         put_parser.add_argument('timestamp', dest='timestamp',
                                 type=int, location='json',
                                 required=True, help='Need input date or type error.')
-        put_parser.add_argument('progress_content', dest='progress_content',
+        put_parser.add_argument('progress', dest='progress',
                                 type=str, location='json',
-                                required=True, help='Need input progress_content or type error.')
-        put_parser.add_argument('progress_result', dest='progress_result',
+                                required=True, help='Need input progress or type error.')
+        put_parser.add_argument('result', dest='result',
                                 type=str, location='json',
-                                required=True, help='Need input progress_result or type error.')
-        put_parser.add_argument('project_status', dest='project_status',
+                                required=True, help='Need input result or type error.')
+        put_parser.add_argument('status', dest='status',
                                 type=str, location='json',
-                                required=True, help='Need input project_status or type error.')
-        put_parser.add_argument('percent', dest='percent',
-                                type=int, location='json',
-                                required=True, help='Need input percent or type error.')
+                                required=True, help='Need input status or type error.')
+        put_parser.add_argument('timeused', dest='timeused',
+                                type=float, location='json',
+                                required=True, help='Need input timeused or type error.')
         put_parser.add_argument('author', dest='author',
                                 type=str, location='json',
                                 required=True, help='Need input author or type error.')
         req = put_parser.parse_args()
 
         AFFAIR_CONTENT_DATA_DB_LOCK.acquire()
-        if req["index"]:
-            ret = affairs_data.AffairContent(affair_id).replace_record(**req)
-        else:
-            req.pop("index")
-            ret = affairs_data.AffairContent(affair_id).add_record(**req)
+        # if req["index"]:
+        #     ret = affairs_data.AffairContent(affair_id).replace_record(**req)
+        # else:
+        req.pop("index")
+        ret = affairs_data.AffairContent(affair_id).add_record(**req)
         AFFAIR_CONTENT_DATA_DB_LOCK.release()
 
         if not ret:
-            return '{"message":"插入失败"}', 200
+            return {"ret":False, "message":"时间线插入失败"}, 200
         else:
-            return f'{{"message":"插入成功","index_num":{ret}}}', 200
+            return {"ret":True, "message":"时间线插入成功"}, 200
 
 
 class Affairs(Resource):
@@ -130,23 +130,23 @@ class Affairs(Resource):
         for affair in ret:
             AFFAIR_CONTENT_DATA_DB_LOCK.acquire()
             # 查询具体事件时间线
-            timeline = affairs_data.AffairContent(affair["uuid"]).search_record(req["start_time"], req["end_time"])
+            timeline = affairs_data.AffairContent(affair["uuid"]).search_record(affair["date"], req["end_time"])
             AFFAIR_CONTENT_DATA_DB_LOCK.release()
             # TODO: 填充 `status` `changeNum` `progressing`三个字段的
             if len(timeline)>0:
                 # 根据最后一次时间线事件的状态赋值
                 affair["status"] = timeline[-1]["status"]
                 affair["changeNum"] = len(timeline)
-                # TODO:根据当前时间线范围内，过了几周进行计算，不管每周做了多少天
+                # 根据当前时间线范围内，过了几周进行计算，不管每周做了多少天
                 affair["progressing"] = 0
                 affair["progressing_days"] = 0
                 last = 0
-                for i in timeline:
+                for iter in timeline:
                     # 超过一周计数
-                    if (timeline[i]["timestamp"] - last) > (7*24*3600*1000):
-                        timeline[i]["progressing"] = affair["progressing"] + 1
-                    last = timeline[i]["timestamp"]
-                    affair["progressing_days"] + timeline[i]["timeline"]
+                    if (iter["timestamp"] - last) > (7*24*3600*1000):
+                        iter["progressing"] = affair["progressing"] + 1
+                    last = iter["timestamp"]
+                    affair["progressing_days"] = affair["progressing_days"] + iter["timeused"]
             else:
                 affair["status"] = "" 
                 affair["changeNum"] = 0

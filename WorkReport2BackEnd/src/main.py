@@ -32,7 +32,7 @@ from dataModel.item_data import ItemList
 
 #使用pyinstaller打包不能使用相对路径
 if hasattr(sys,'_MEIPASS'):
-    app = Flask(__name__,static_url_path='/static',static_folder=sys._MEIPASS+'/static')
+    app = Flask(__name__,static_url_path='',static_folder=sys._MEIPASS+'/static')
 else:
     app = Flask(__name__,static_url_path='',static_folder='../static')
 
@@ -89,6 +89,8 @@ if __name__ == '__main__':
         else:
             port = port + 1
 
+    logging.basicConfig(level=logging.WARN,
+                        format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
     #update Data Model
     DataVersion(AffairList(),
                 AffairContent(),

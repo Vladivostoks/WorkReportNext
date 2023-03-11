@@ -7,8 +7,8 @@ let user_check_api:MockMethod = {
     console.dir(query)
     if(query?.ischeck_super)
     {
-      return { ret: true }
-      // return { ret: false }
+      // return { ret: true }
+      return { ret: false }
     }
     else
     {

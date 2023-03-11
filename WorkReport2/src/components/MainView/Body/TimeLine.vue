@@ -77,7 +77,7 @@
     <el-step v-for="(item, index) in view_timeline_data" :key="index"
             :status="TimelineStatusMap[item.status]">
       <template #icon>
-        <h3>{{ "第"+String(GetWeekIndex(item.timestamp))+"周" }}</h3>
+        <h3>{{ String(GetWeekIndex(item.timestamp)[1])+"年 第"+String(GetWeekIndex(item.timestamp)[0])+"周" }}</h3>
       </template>
       <template #title>
         <div>
@@ -85,7 +85,7 @@
           <el-tag class="ml-2" :type="NameStatusMap[item.status]">{{item.author}}</el-tag>
           <!-- 本周内的可以进行修改删除 -->
           <span v-if="prop?.editable && user_info.user_name==item.author && ((new Date().getTime()-item.timestamp)/1000/60/60/24)<7">
-            <el-popconfirm title="确认删除？" @confirm="DelRecent(index)">
+            <el-popconfirm title="确认删除？" @confirm="DelRecent(item.timestamp, index)">
               <template #reference>
                 <el-button style="margin: 0em 1em;" type="danger" size="small" :icon="Delete"/>
               </template>
@@ -186,7 +186,7 @@ onMounted(()=>{
   RpcGetTimeline(prop.uuid,prop.start_time,prop.end_time).then((res:TimelineInfo[])=>{
     view_timeline_data.value = _.cloneDeep(res);
     _.reverse(view_timeline_data.value)
-    emit('statusChange', view_timeline_data.value[0]?.status?view_timeline_data.value[0].status:ItemStatus.noinit);
+    emit('statusChange', view_timeline_data.value[0]?.status?view_timeline_data.value[0].status:ItemStatus.noinit, 0);
   }).catch((err)=>{
     ElMessage.error(err.message)
   })
@@ -260,7 +260,7 @@ function Submit(data:TimelineInfo):boolean{
     if(res)
     {
       view_timeline_data.value.splice(0,0,_.cloneDeep(data));
-      emit('statusChange', view_timeline_data.value[0].status)
+      emit('statusChange', view_timeline_data.value[0].status, 1)
       ElMessage.success("时间线新增成功");
       new_timeline=Reset();
     }
@@ -294,14 +294,14 @@ function Reset():TimelineInfo{
 /**
  * 删除第i个时间点
  */
-function DelRecent(index:number){
+function DelRecent(timestamp:number, index:number){
   //同步到后台,[NOTICE]index需要倒置
-  RpcDeleteTimeline(prop.uuid, view_timeline_data.value.length-1-index).then((res:boolean)=>{
+  RpcDeleteTimeline(prop.uuid, timestamp).then((res:boolean)=>{
     if(res)
     {
       //删除数组
       view_timeline_data.value.splice(index,1);
-      emit('statusChange', view_timeline_data.value[0]?.status?view_timeline_data.value[0].status:ItemStatus.noinit);
+      emit('statusChange', view_timeline_data.value[0]?.status?view_timeline_data.value[0].status:ItemStatus.noinit, -1);
       ElMessage.success("时间线删除成功");
     }
     else
@@ -326,6 +326,11 @@ function DelRecent(index:number){
     :deep() .el-form
       width: 100%
     margin: 1em 0em
+
+.el-step.is-horizontal 
+  :deep() .el-step__line
+    width: 78%
+    margin-left: 6em
 
 .ml-2
   margin: 0em 1em;

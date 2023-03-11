@@ -30,11 +30,12 @@
       </el-col>
   </el-header>
   <el-container>
-  <el-table :data="tableData" min-height="80vh" width="100%" :row-style="RowStyleCalc" row-key="uuid">
+  <el-table :data="tableData" ref="tableRef" min-height="80vh" width="100%" :row-style="RowStyleCalc" row-key="uuid">
     <el-table-column type="expand">
       <template #default="props">
         <InfoExpand :data="props.row" 
                     :index="props.$index" 
+                    @num_change="(num)=>{props.row.changeNum+=num}"
                     v-model:status="props.row.status"/>
       </template>
     </el-table-column>
@@ -75,7 +76,7 @@
     </el-table-column>
     <el-table-column label="Operations" min-width="25%" >
     <template #header>
-      <el-input v-model="search" size="small" placeholder="关键字搜索" />
+      <el-input v-model="search" size="small" placeholder="关键字搜索" @keyup.enter="filterWithKeyWords(search)"/>
     </template>
 
     <template #default="scope">
@@ -94,7 +95,7 @@
 import { useNow, useDateFormat } from '@vueuse/core'
 import InfoExpand from "@/components/MainView/Body/InfoExpand.vue"
 import type { DetailInfo } from "@/components/MainView/Body/InfoExpand.vue"
-import { onMounted, provide, reactive, ref, watch,  } from "vue";
+import { nextTick, onMounted, provide, reactive, ref, watch,  } from "vue";
 import type { Ref,  } from "vue";
 import { ItemStatus } from "@/assets/js/timeline";
 import { DelItems, GetItems, PutItems, type ItemData } from "@/assets/js/itemtable";
@@ -107,6 +108,8 @@ import { ElMessage, type FormInstance } from 'element-plus'
 import { Watch } from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router';
 import { TableContentType } from '@/assets/js/types';
+import { UserInfo } from '@/stores/counter';
+import { USER_TYPE } from '@/assets/js/login';
 
 /************************* 基础模式相关变量 **********************************/
 /// 回溯模式
@@ -120,11 +123,49 @@ async function NormalUpdateTable(){
   const date:Date = new Date(baseTime.value)
   const start:number = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay()).getTime();
   const end:number = start+ 3600 * 1000 * 24 * 7;
-  //TODO:Check
-  tableData.value = _.cloneDeep(await GetItems(start,
-                                               end,
-                                               false,
-                                               true));
+  let data:ItemData[] = await GetItems(start, end, false, true);
+  let user_info = UserInfo()
+
+  //根据属性进行过滤
+  if(user_info.user_lv == USER_TYPE.normalize)
+  {
+    data = _.cloneDeep(data.filter((iter:ItemData)=>{
+      if(iter.person.indexOf(user_info.user_name) == -1)
+        return false; 
+      return true;
+    }))
+  }
+
+  //检查当前的模式
+  switch(route.params.tableMode)
+  {
+    case TableContentType.NewItem:
+      //只留本周新增
+      tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
+        if(iter.date>=start && iter.date<=end)
+          return true
+        return false;
+      }))
+      break;
+    case TableContentType.LeftItem:
+      //只留未完成
+      tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
+        if(iter.type == ItemStatus.successed || iter.type == ItemStatus.stop)
+          return false
+        return true;
+      }))
+      break;
+    case TableContentType.HistoryItem:
+      //只留已完成
+      tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
+        if(iter.type == ItemStatus.successed || iter.type == ItemStatus.stop)
+          return true;
+        return false
+      }))
+      break;
+    default:
+      break;
+  }
 }
 
 
@@ -187,6 +228,49 @@ const shortcuts = [
 let mode:Ref<TableContentType> = ref(TableContentType.NewItem);
 /// 当前表单显示内容
 const tableData:Ref<ItemData[]> = ref([])
+/// 表单对象
+const tableRef:any = ref(null)
+
+// 关键字检索
+async function filterWithKeyWords(key_word:string){
+    console.dir("search:"+key_word);
+    const str_search = (dst_obj:any,content:string)=>{
+        if(typeof(dst_obj) == "string")
+        {
+          return (dst_obj.search(content) != -1);
+        }
+        else if(typeof(dst_obj) == "object")
+        {
+          for(let key in dst_obj)
+          {
+              if(str_search(dst_obj[key],content))
+              {
+                  return true;
+              }
+          }
+        }
+        else
+        {
+          //不支持的类型,直接跳过
+          return false;
+        }
+    }
+
+    if(key_word !== "")
+    {
+      await UpdateTableContent()
+      tableData.value = _.cloneDeep(tableData.value.filter((iter:ItemData)=>{
+        if(str_search(iter,key_word))
+          return true
+        return false;
+      }))
+      nextTick(() => { tableRef.value.doLayout(); })
+    }
+    else
+    {
+      await UpdateTableContent()
+    }
+}
 
 /// 项目表格的可编辑状态需要同步注入子组件，和时间线组件同步
 provide('viewback', viewback);
@@ -279,7 +363,8 @@ watch(route, (newroute) => {
 
 //监听时间戳是不是本周
 watch(baseTime, (newbaseTime) => {
-  viewback.value = GetWeekIndex(newbaseTime) != GetWeekIndex(new Date().getTime());
+  viewback.value = GetWeekIndex(newbaseTime)[0] != GetWeekIndex(new Date().getTime())[0] 
+                || GetWeekIndex(newbaseTime)[1] != GetWeekIndex(new Date().getTime())[1];
   //变更集合
   UpdateTableContent();
 })

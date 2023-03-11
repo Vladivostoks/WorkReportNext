@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*- 
 import pprint
+import re
 import sqlite3
 import time
 import uuid
+import logging
 
 from config.backend_conf import LIST_DATA_DB,AFFAIR_CONTENT_DATA_DB
 from config.backend_conf import AFFAIR_LIST_TABLE,ITEM_LIST_TABLE,AFFAIR_CONTENT_DATA_DB
@@ -28,51 +30,83 @@ class AffairContent(DataModel):
     __CREAT_AFFAIRS_CONTENT_TABLE = """CREATE TABLE IF NOT EXISTS '%(affair_id)s'(
                                        index_num        INTEGER PRIMARY KEY AUTOINCREMENT,
                                        timestamp        DATETIME NOT NULL,
-                                       progress_content BLOB,
-                                       progress_result  BLOB,
-                                       project_status   TEXT NOT NULL,
+                                       progress         BLOB,
+                                       result           BLOB,
+                                       status           TEXT NOT NULL,
+                                       timeused         REAL NOT NULL,
                                        percent          INTEGER NOT NULL,
                                        author           TEXT NOT NULL);
                                     """
+    # 改名
+    __RENAME_COLUMN_NAME = "ALTER TABLE '%(affair_id)s' RENAME COLUMN %(old_column_name)s TO %(new_column_name)s;"
     # 按照时间建立索引
     __CREAT_AFFAIRS_CONTENT_INDEX = "CREATE INDEX IF NOT EXISTS IDXDate on '%(affair_id)s'(timestamp);"
 
     # 按照时间区间查找
     __SEARCH_CONTENT_WITH_TIME = """SELECT * FROM "%(affair_id)s"
                                     WHERE timestamp >= %(start_time)d and timestamp <= %(end_time)d
-                                    ORDER BY index_num DESC;"""
+                                    ORDER BY index_num;"""
 
     # 插入数据
-    __ADD_CONTENT = """INSERT INTO '%(affair_id)s'(timestamp,progress_content,progress_result,project_status,percent,author)
-                       VALUES('%(timestamp)d','%(progress_content)s','%(progress_result)s','%(project_status)s','%(percent)d','%(author)s');
+    __ADD_CONTENT = """INSERT INTO '%(affair_id)s' (timestamp,progress,result,status,timeused,percent,author)
+                       VALUES('%(timestamp)d','%(progress_content)s','%(progress_result)s','%(project_status)s','%(timeused)f','%(percent)d','%(author)s');
                     """
     # 找到最后递增id
     __FIND_LAST_INSERT_ROWID = "SELECT LAST_INSERT_ROWID() FROM '%(affair_id)s'"
                        
     #替换数据
-    __REPLACE_CONTENT = """REPLACE INTO '%(affair_id)s'(index_num,timestamp,progress_content,progress_result,project_status,percent,author)
-                           VALUES('%(index)d','%(timestamp)d','%(progress_content)s','%(progress_result)s','%(project_status)s','%(percent)d','%(author)s');
-                        """
+    # __REPLACE_CONTENT = """REPLACE INTO '%(affair_id)s'(index_num,timestamp,progress_content,progress_result,project_status,percent,author)
+    #                        VALUES('%(index)d','%(timestamp)d','%(progress_content)s','%(progress_result)s','%(project_status)s','%(percent)d','%(author)s');
+    #                     """
     # 删除数据
-    __DELETE_CONTENT = 'DELETE FROM "%(affair_id)s" WHERE index_num=%(index)d;'
+    __DELETE_CONTENT = 'DELETE FROM "%(affair_id)s" WHERE timestamp=%(timestamp)d;'
 
     # 删除表
     __DELETE_TABLE = 'DROP TABLE "%(affair_id)s";'
 
-    #获取当前建表sql的版本号
     def get_version(self,verisons):
-        verisons["affair_version"] = "V1.0.0"
+        verisons["affair_version"] = "V1.0.1"
         return verisons
+
+    # v1.0.1更新操作
+    def __update_V1_0_1(self,local_verisons):
+        ret=False
+        if "V1.0.1">local_verisons:
+            try:
+                # 遍历文件中的所有表，并对其进行处理
+                conn = sqlite3.connect(self.__db_file)
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' and name != 'sqlite_sequence' order by name")
+                tables = cursor.fetchall()
+                for table in tables: 
+                    cursor.execute(f"ALTER TABLE '{table[0]}' ADD COLUMN timeused REAL NOT NULL DEFAULT 0.5;")
+                    change_name_fun = lambda old_name,new_name: self.__RENAME_COLUMN_NAME % { "affair_id":table[0],
+                                                                                              "old_column_name": old_name, 
+                                                                                              "new_column_name": new_name }
+                    cursor.execute(change_name_fun("progress_content", "progress"))
+                    cursor.execute(change_name_fun("progress_result", "result"))
+                    cursor.execute(change_name_fun("project_status", "status"))
+
+                conn.close() #关闭连接
+                self.__db.commit()
+                ret = True
+            except sqlite3.Error as e:
+                logging.error(e)
+
+        return ret,"V1.0.1"
 
     # 外部能够访问的更新操作
     def update(self,local_verisons):
-        #如果更新，需要遍历AFFAIR_CONTENT_DATA_DB中所有表
-        return False,local_verisons
+        ret,version = self.__update_V1_0_1(local_verisons["affair_version"])
+
+        local_verisons["affair_version"] = version if ret else local_verisons["affair_version"]
+
+        return ret,local_verisons
 
     def __init__(self,affair_id="",db_file=AFFAIR_CONTENT_DATA_DB):
         # 外部打开数据库后将句柄给入,按照affair_id找到表位置
         self.__affair_id = affair_id
-
+        self.__db_file = db_file
         try:
             self.__db = sqlite3.connect(db_file)
             self.__db.row_factory = dict_factory
@@ -86,8 +120,8 @@ class AffairContent(DataModel):
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
     def __del__(self):
         self.__db.close()
@@ -101,69 +135,73 @@ class AffairContent(DataModel):
                        project_status,
                        percent,
                        author):
-        try:
-            cursor = self.__db.cursor()
+        # try:
+        #     cursor = self.__db.cursor()
 
-            if self.__affair_id != "":
-                cursor.execute(self.__REPLACE_CONTENT % {"affair_id":self.__affair_id,
-                                                         "index":index,
-                                                         "timestamp":timestamp,
-                                                         "progress_content":progress_content,
-                                                         "progress_result":progress_result,
-                                                         "project_status":project_status,
-                                                         "percent":percent,
-                                                         "author":author})
-            cursor.close()
-            self.__db.commit()
+        #     if self.__affair_id != "":
+        #         cursor.execute(self.__REPLACE_CONTENT % {"affair_id":self.__affair_id,
+        #                                                  "index":index,
+        #                                                  "timestamp":timestamp,
+        #                                                  "progress_content":progress_content,
+        #                                                  "progress_result":progress_result,
+        #                                                  "project_status":project_status,
+        #                                                  "percent":percent,
+        #                                                  "author":author})
+        #     cursor.close()
+        #     self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
-            return False
+        # except sqlite3.Error as e:
+        #     pprint.pprint(e)
+        #     return False
 
         return True
 
     #增加/修改一条记录
     def add_record(self,
                    timestamp,
-                   progress_content,
-                   progress_result,
-                   project_status,
-                   percent,
-                   author):
+                   progress,
+                   result,
+                   status,
+                   timeused,
+                   author,
+                   **args):
         try:
             cursor = self.__db.cursor()
             if self.__affair_id != "":
                 cursor.execute(self.__ADD_CONTENT % {"affair_id":self.__affair_id,
                                                      "timestamp":timestamp,
-                                                     "progress_content":progress_content,
-                                                     "progress_result":progress_result,
-                                                     "project_status":project_status,
-                                                     "percent":percent,
+                                                     "progress_content":progress,
+                                                     "progress_result":result,
+                                                     "project_status":status,
+                                                     "timeused":timeused,
+                                                     "percent":0,
                                                      "author":author})
                 cursor.execute(self.__FIND_LAST_INSERT_ROWID % {"affair_id":self.__affair_id})
                 ret = cursor.fetchone()["LAST_INSERT_ROWID()"]
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+            # 更新list中的项目状态
+            ret = AffairList().update_record(self.__affair_id, status, timestamp)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return ret
 
     #删除指定记录
-    def delete_record(self,index):
+    def delete_record(self,timestamp):
         try:
             cursor = self.__db.cursor()
 
             if self.__affair_id != "":
-                cursor.execute(self.__DELETE_CONTENT % {"affair_id":self.__affair_id,
-                                                        "index":index})
+                ret = cursor.execute(self.__DELETE_CONTENT % {"affair_id":self.__affair_id,
+                                                              "timestamp":timestamp})
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -175,16 +213,18 @@ class AffairContent(DataModel):
             cursor = self.__db.cursor()
 
             if self.__affair_id != "":
-                # 外部时间字符串转时间戳
-                #start_time = time.mktime(time.strptime(start_time, "%Y-%m-%d"))
-                #end_time = time.mktime(time.strptime(end_time, "%Y-%m-%d"))
                 cursor.execute(self.__SEARCH_CONTENT_WITH_TIME % {"affair_id":self.__affair_id,
                                                                   "start_time":start_time,
                                                                   "end_time":end_time})
             result = cursor.fetchall()
             cursor.close()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
+
+        for iter in result:
+            if re.match('^[a-zA-Z]+$', iter["status"]):
+                iter["status"] = "执行中"
+
         return result
 
     #查询最后一条记录
@@ -202,8 +242,9 @@ class AffairContent(DataModel):
                                                                   "end_time":time.time()*1000})
             result = cursor.fetchone()
             cursor.close()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
+            
         return result
 
     # 删除表
@@ -216,8 +257,8 @@ class AffairContent(DataModel):
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -247,6 +288,7 @@ class AffairList(DataModel):
                                     name            TEXT NOT NULL,
                                     type            TEXT NOT NULL,
                                     subtype         TEXT,
+                                    device          TEXT,
                                     describe        TEXT NOT NULL,
                                     url             TEXT,
                                     period          INTEGER,
@@ -277,8 +319,8 @@ class AffairList(DataModel):
     __SEARCH_AFFAIRS_WITH_UPDATE_TIME = """SELECT * FROM %(affair_list_table)s 
                                            WHERE lastupdate_date >= %(start_time)d and lastupdate_date <= %(end_time)d
                                         """
-    # 更新数据的最后更新时间
-    __UPDATE_UPDATE_TIME = "UPDATE %(affair_list_table)s SET lastupdate_date = %(lastupdate_date)d WHERE WHERE uuid = '%(uuid)s';"
+    # 更新数据的最后更新时间和状态
+    __UPDATE_UPDATE_TIME = "UPDATE %(affair_list_table)s SET lastupdate_date = %(lastupdate_date)d, status = '%(status)s' WHERE uuid = '%(uuid)s';"
 
     # 插入/替换数据
     __ADD_AFFAIRS = """REPLACE INTO %(affair_list_table)s(uuid,
@@ -329,27 +371,31 @@ class AffairList(DataModel):
         if "V1.0.2">local_verisons:
             try:
                 cursor = self.__db.cursor()
-                cursor.execute(f"ALTER TABLE {self.__table_name} ADD COLUMN subtype TEXT;")
-                cursor.execute(f"ALTER TABLE {self.__table_name} ADD COLUMN period_stamp INTEGER NOT NULL;")
                 # 改名
                 change_name_fun = lambda old_name,new_name: self.__RENAME_COLUMN_NAME % { "affair_list_table":self.__table_name, 
                                                                                           "old_column_name": old_name, 
                                                                                           "new_column_name": new_name }
-
                 cursor.execute(change_name_fun("create_date", "date"))
                 cursor.execute(change_name_fun("region", "area"))
                 cursor.execute(change_name_fun("prjname", "name"))
-                cursor.execute(change_name_fun("prjtype", "type"))
-                cursor.execute(change_name_fun("prjtype", "device"))
+                cursor.execute(change_name_fun("prjtype", "subtype"))
+                cursor.execute(change_name_fun("prjmodel", "device"))
                 cursor.execute(change_name_fun("brief", "describe"))
                 cursor.execute(change_name_fun("svnurl", "url"))
                 cursor.execute(change_name_fun("duty_persons", "person"))
                 cursor.execute(change_name_fun("relate_persons", "link_person"))
 
+                cursor.execute(f"ALTER TABLE {self.__table_name} ADD COLUMN type TEXT;")
+                cursor.execute(f"UPDATE {self.__table_name} SET type = substr(subtype, 1, INSTR(subtype, ',') - 1) WHERE type IS NULL;")
+                cursor.execute(f"UPDATE {self.__table_name} SET type = subtype WHERE type IS '';")
+
+                cursor.execute(f"ALTER TABLE {self.__table_name} ADD COLUMN period_stamp INTEGER;")
+                cursor.execute(f"UPDATE {self.__table_name} SET period_stamp = date+(period*7*24*3600*1000) WHERE period_stamp IS NULL;")
+
                 cursor.close()
                 self.__db.commit()
                 ret=True
-            except Exception as e:
+            except sqlite3.Error as e:
                 pprint.pprint(e)
 
         return ret,"V1.0.2"
@@ -364,7 +410,7 @@ class AffairList(DataModel):
                 cursor.close()
                 self.__db.commit()
                 ret=True
-            except Exception as e:
+            except sqlite3.Error as e:
                 pprint.pprint(e)
 
         return ret,"V1.0.1"
@@ -393,13 +439,38 @@ class AffairList(DataModel):
             cursor.close()
             self.__db.commit()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
 
     def __del__(self):
         self.__db.close()
-    
+
+    # 更新修改时间
+    def update_record(self,
+                      uuid,
+                      status,
+                      timestamp):
+        try:
+            cursor = self.__db.cursor()
+
+            print(self.__UPDATE_UPDATE_TIME % {"affair_list_table":self.__table_name,
+                                                        "lastupdate_date": timestamp,
+                                                        "uuid": uuid,
+                                                        "status": status})
+            cursor.execute(self.__UPDATE_UPDATE_TIME % {"affair_list_table":self.__table_name,
+                                                        "lastupdate_date": timestamp,
+                                                        "uuid": uuid,
+                                                        "status": status})
+            cursor.close()
+            self.__db.commit()
+
+        except sqlite3.Error as e:
+            logging.error(e)
+            return False
+
+        return True
+
     #增加/修改一条记录
     def add_record(self,
                    uuid,
@@ -450,8 +521,8 @@ class AffairList(DataModel):
             OptionData("dutyperson_opt").option_add(dutyperson)
             OptionData("relateperson_opt").option_add(linkperson)
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -465,8 +536,8 @@ class AffairList(DataModel):
             cursor.close()
             self.__db.commit()
             AffairContent(id).delete_table()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -480,7 +551,7 @@ class AffairList(DataModel):
             if 0:
                 pass
             else:
-                # 时间范围为最后更新时间还是创建时间
+                # 时间范围为最后更新时间还是创建时间a,TODO:增加项目状态判断
                 sql = self.__SEARCH_AFFAIRS_WITH_UPDATE_TIME
 
                 # 项目状态是否是归档项目
@@ -488,23 +559,18 @@ class AffairList(DataModel):
                     # 归档项目
                     if other_param["isupdatetime"] != 'true': 
                         sql = self.__SEARCH_AFFAIRS_WITH_TIME
-                elif other_param["iscomplete"] == 'false': 
-                    # 非归档项目
-                    pass
                 else:
-                    pass #不限制状态
+                    # 非归档项目
+                    sql += f"or (status != '已终止' and status != '已完成' and date < {end_time:d})"
 
-                print(sql % {"affair_list_table":self.__table_name,
-                                      "start_time":start_time,
-                                      "end_time":end_time})
                 cursor.execute(sql % {"affair_list_table":self.__table_name,
                                       "start_time":start_time,
                                       "end_time":end_time})
             result = cursor.fetchall()
             cursor.close()
 
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
         # 修饰
         for res in result:

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*- 
 import sqlite3
 import pprint
+import logging
 
 from dataModel.model_version import DataModel
 from config.backend_conf import CONFIG_DB,USER_TABLE
@@ -37,8 +38,8 @@ class OptionData(DataModel):
             cursor.execute(self.__CREAT_OPTION_TABLE % {"option_table":self.__table_name})
             cursor.close()
             self.__db.commit()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
     def __del__(self):
         self.__db.close()
@@ -57,8 +58,8 @@ class OptionData(DataModel):
 
             cursor.close()
             self.__db.commit()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -71,8 +72,8 @@ class OptionData(DataModel):
 
             cursor.close()
             self.__db.commit()
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
             return False
 
         return True
@@ -86,8 +87,8 @@ class OptionData(DataModel):
             cursor.close()
             for i in ret:
                 result = result+i
-        except Exception as e:
-            pprint.pprint(e)
+        except sqlite3.Error as e:
+            logging.error(e)
 
         return result
 

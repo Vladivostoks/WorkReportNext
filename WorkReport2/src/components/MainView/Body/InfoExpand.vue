@@ -20,7 +20,7 @@
     </el-descriptions-item>
   </el-descriptions>
   <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" :start_time="prop.data.date" :end_time="end_time" :editable="!(viewback || mode==TableContentType.HistoryItem)"
-            @statusChange="(status)=>{emit('update:status', status)}"/>
+            @statusChange="(status, num)=>{emit('update:status', status);emit('num_change', num)}"/>
 </el-card>
 </template>
 
@@ -41,7 +41,7 @@ export interface DetailInfo {
   data: ItemData,
 };
 const prop = defineProps<DetailInfo>()
-const emit = defineEmits(['update:status'])
+const emit = defineEmits(['update:status', 'num_change'])
 
 const viewback = inject('viewback');
 const mode = inject('mode');

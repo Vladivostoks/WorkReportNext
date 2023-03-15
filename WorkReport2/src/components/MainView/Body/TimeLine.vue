@@ -106,11 +106,11 @@
       <template #description>
         <el-card>
           <template #header>
-            <div>【当前进展】</div>
-            <pre>{{ item.progress }}</pre>
+            <div class="text_title">【当前进展】：</div>
+            <div class="text">{{ item.progress }}</div>
           </template>
-            <div>【结果/计划】</div>
-            <pre>{{ item.result }}</pre>
+            <div class="text_title">【结果/计划】：</div>
+            <div class="text">{{ item.result }}</div>
         </el-card>
       </template>
     </el-step>
@@ -316,6 +316,8 @@ function DelRecent(timestamp:number, index:number){
 
 </script>
 <style lang="stylus" scoped>
+.el-step.is-horizontal
+  min-width 40em
 
 .el-step__main
   .el-card
@@ -334,4 +336,12 @@ function DelRecent(timestamp:number, index:number){
 
 .ml-2
   margin: 0em 1em;
+
+.text_title
+  width: 10em
+
+.text
+  white-space: pre-wrap !important
+  word-wrap: break-word !important
+  overflow: auto !important
 </style>

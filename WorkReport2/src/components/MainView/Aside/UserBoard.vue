@@ -19,7 +19,7 @@ default-active="2"
             <el-menu-item index="1-3">已完成</el-menu-item>
         </router-link>
     </el-sub-menu>
-    <el-sub-menu index="0">
+    <!-- <el-sub-menu index="0">
         <template #title>
             <el-icon><MessageBox /></el-icon>
             <span>项目归档</span>
@@ -27,14 +27,14 @@ default-active="2"
         <router-link :to="{name: 'table', params: { tableMode:TableContentType.Repository}}">
             <el-menu-item index="0-1">归档记录</el-menu-item>
         </router-link>
-    </el-sub-menu>
-    <el-sub-menu index="2">
+    </el-sub-menu> -->
+    <!-- <el-sub-menu index="2">
         <template #title>
             <el-icon><IceDrink /></el-icon>
             <span>敏捷开发</span>
         </template>
         <el-menu-item index="2-1">资源甘特图</el-menu-item>
-    </el-sub-menu>
+    </el-sub-menu> -->
     <!-- <el-sub-menu index="2">
         <template #title>
             <el-icon><Histogram /></el-icon>

@@ -61,7 +61,7 @@ const time_compare:ComputedRef<string> = computed(():string=>{
   const pass_per = Math.round(prop.data.progressing/(interval<=0?1:interval)*100)
   const pass_interval = GetWeekInterval(prop.data.date,new Date().getTime());
 
-  return String(pass_interval<=0?1:pass_interval)+"周/"+String(GetWeekInterval(prop.data.date, prop.data.period))+"周("+pass_per+"%)"
+  return String(pass_interval<=0?1:pass_interval)+"周/"+String(interval<=0?1:interval)+"周("+pass_per+"%)"
 })
 
 function CopyUrl()

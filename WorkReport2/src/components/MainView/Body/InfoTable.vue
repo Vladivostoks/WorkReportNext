@@ -7,11 +7,10 @@
               format="YYYY [年 第] ww [周]"
               value-format="x"
               placeholder="基准时间"/>
-        <el-switch v-else v-model="checkWithCreateTimeStamp"
-                          inline-prompt
-                          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-                          active-text="完成时间"
-                          inactive-text="创建时间"/>
+        <el-radio-group v-else v-model="checkWithCreateTimeStamp" size="large">
+          <el-radio-button :label="true">创建时间</el-radio-button>
+          <el-radio-button :label="false">完成时间</el-radio-button> 
+        </el-radio-group>
       </el-col>
       <el-col :span="8">
         <el-date-picker v-if="mode==TableContentType.Repository"
@@ -30,7 +29,7 @@
       </el-col>
   </el-header>
   <el-container>
-  <el-table :data="tableData" ref="tableRef" min-height="80vh" width="100%" :row-style="RowStyleCalc" row-key="uuid">
+  <el-table :data="tableData" ref="tableRef" max-height="87vh" min-height="87vh" width="100%" :row-style="RowStyleCalc" row-key="uuid">
     <el-table-column type="expand">
       <template #default="props">
         <InfoExpand :data="props.row" 
@@ -53,7 +52,7 @@
     <el-table-column prop="name" label="名称" min-width="20%" />
     <el-table-column prop="type" label="项目类型" min-width="20%" :filters="typeList" :filter-method="filterTag">
       <template #default="scope">
-      <el-tag type="danger">{{ scope.row.type }}</el-tag>
+      <el-tag effect="dark" type="danger">{{ scope.row.type }}</el-tag>
       </template>
     </el-table-column>
     <el-table-column prop="describe" label="原始需求/反馈">
@@ -81,7 +80,11 @@
 
     <template #default="scope">
         <el-button size="small" @click="formDataEdit(scope.row)" type="primary" :disabled="viewback ||(mode==TableContentType.HistoryItem)">编辑</el-button >
-        <el-button size="small" type="danger" @click="formDataDel(scope.row.uuid)" :disabled="viewback || !(mode==TableContentType.NewItem)">删除</el-button >
+        <el-popconfirm title="确认删除？" @confirm="formDataDel(scope.row.uuid)">
+          <template #reference>
+            <el-button size="small" type="danger" :disabled="viewback || !(mode==TableContentType.NewItem)">删除</el-button >
+          </template>
+        </el-popconfirm>
     </template>
 
     </el-table-column>
@@ -322,10 +325,21 @@ const personList:Ref<List[]> = ref([])
 /// 过滤显示
 const filterTag = (value: string, row: ItemData, column:any) => {
   const key:keyof ItemData = column.property
+  if(Array.isArray(row[key]))
+  {
+    return (row[key] as Array<string>).indexOf(value) != -1;
+  }
 
   return row[key] === value;
 }
 
+///更新过滤选项
+function UpdateTableFilter(){
+  deviceList.value = CreateList(tableData.value, "device");
+  typeList.value = CreateList(tableData.value, "type");
+  statusList.value = CreateList(tableData.value, "status");
+  personList.value = CreateList(tableData.value, "person");
+}
 /// 更新表单显示内容
 async function UpdateTableContent(){
   if(mode.value == TableContentType.Repository)
@@ -337,10 +351,7 @@ async function UpdateTableContent(){
     await NormalUpdateTable();
   }
 
-  deviceList.value = CreateList(tableData.value, "device");
-  typeList.value = CreateList(tableData.value, "type");
-  statusList.value = CreateList(tableData.value, "status");
-  personList.value = CreateList(tableData.value, "person");
+  UpdateTableFilter()
 }
 
 /// 页面挂载
@@ -400,11 +411,16 @@ function RowStyleCalc({ row, rowIndex }:{row:ItemData, rowIndex:number}):any
 
   if(highlight)
   {
-    return {
+    return work_per==100?{
+      background: `linear-gradient(to right, \
+                                  var(--status-${status}-do-color), \
+                                  var(--status-${status}-do-color) ${work_per-2}%,\
+                                  var(--status-${status}-highlight-color) 100%)`
+    }:{
       background: `linear-gradient(to right, \
                                   var(--status-${status}-do-color), \
                                   var(--status-${status}-do-color) ${work_per}%, var(--status-${status}-pass-color) ${work_per}%, \
-                                  var(--status-${status}-pass-color) ${pass_per-2}%,
+                                  var(--status-${status}-pass-color) ${pass_per-2}%,\
                                   var(--status-${status}-highlight-color) 100%)`
     }
   }
@@ -451,12 +467,15 @@ async function formSubmit(data:ItemData)
               tableData.value[i] = _.cloneDeep(data);
               flag = true;
               ElMessage.success("项目编辑成功");
+              UpdateTableFilter();
+              break;
             }
           }
 
           if(!flag)
           {
             tableData.value.push(data);
+            UpdateTableFilter();
             ElMessage.success("项目添加成功");
           }
         }
@@ -504,6 +523,7 @@ function formDataDel(uuid:string)
         {
           tableData.value.splice(Number(i),1);
           ElMessage.success("项目删除成功");
+          UpdateTableFilter();
           break;
         }
       }
@@ -538,7 +558,7 @@ function formDataExport(quick:boolean)
     // 绿
     --status-success-pass-color: #BDE1AC
     --status-success-do-color: #A0D387
-    --status-success-highlight-color: #82C563
+    --status-success-highlight-color: #51FF00
 
     // 红
     --status-error-pass-color: #F6AAAA
@@ -548,17 +568,17 @@ function formDataExport(quick:boolean)
     // 蓝
     --status-normal-pass-color: #B0DCED 
     --status-normal-do-color: #87C9E3
-    --status-normal-highlight-color: #5FB6D9
+    --status-normal-highlight-color: #00B6FF
 
     // 黄
     --status-wait-pass-color: #FCE0A2
     --status-wait-do-color: #FAD072
-    --status-wait-highlight-color: #F7BF42
+    --status-wait-highlight-color: #FFB000
 
     // 深蓝
     --status-finish-pass-color: #8C9FDA
     --status-finish-do-color: #6780CD
-    --status-finish-highlight-color: #4260BF
+    --status-finish-highlight-color: #2852d9
 
   :deep() .cell
     overflow: visible
@@ -567,12 +587,16 @@ function formDataExport(quick:boolean)
   :deep() .el-table__expanded-cell
     padding: 0em 2em
 
+  // :deep() .el-table__body-wrapper
+  //   max-height: 83vh
+  //   overflow-y: scroll
+
 
 .el-header
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 5rem;
+  height: 10vh;
   background-color: #5470c6;
 
 .el-col
@@ -582,6 +606,7 @@ function formDataExport(quick:boolean)
 .text
   white-space: pre-wrap !important
   word-wrap: break-word !important
+  overflow: auto !important
 
 </style>
 

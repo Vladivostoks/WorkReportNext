@@ -79,6 +79,7 @@ class AffairContent(DataModel):
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' and name != 'sqlite_sequence' order by name")
                 tables = cursor.fetchall()
                 for table in tables: 
+                    logging.info(f"Upgrading table '{table[0]}'...")
                     cursor.execute(f"ALTER TABLE '{table[0]}' ADD COLUMN timeused REAL NOT NULL DEFAULT 0.5;")
                     change_name_fun = lambda old_name,new_name: self.__RENAME_COLUMN_NAME % { "affair_id":table[0],
                                                                                               "old_column_name": old_name, 
@@ -370,6 +371,7 @@ class AffairList(DataModel):
         ret=False
         if "V1.0.2">local_verisons:
             try:
+                logging.info(f"Upgrading table '{self.__table_name}'...")
                 cursor = self.__db.cursor()
                 # 改名
                 change_name_fun = lambda old_name,new_name: self.__RENAME_COLUMN_NAME % { "affair_list_table":self.__table_name, 

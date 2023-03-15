@@ -1,8 +1,10 @@
 # -*- coding:utf-8 -*- 
+import logging
 import pprint
 import sys
 import threading
 import time
+import datetime
 from flask import Flask,abort
 from flask_restful import reqparse, Resource, reqparse
 from dataModel import affairs_data 
@@ -136,15 +138,18 @@ class Affairs(Resource):
             if len(timeline)>0:
                 # 根据最后一次时间线事件的状态赋值
                 affair["status"] = timeline[-1]["status"]
-                affair["changeNum"] = len(timeline)
                 # 根据当前时间线范围内，过了几周进行计算，不管每周做了多少天
+                affair["changeNum"] = 0
                 affair["progressing"] = 0
                 affair["progressing_days"] = 0
                 last = 0
                 for iter in timeline:
                     # 超过一周计数
+                    if(iter["timestamp"]-req["start_time"]) >= 0:
+                        affair["changeNum"] = affair["changeNum"]+1
+
                     if (iter["timestamp"] - last) > (7*24*3600*1000):
-                        iter["progressing"] = affair["progressing"] + 1
+                        affair["progressing"] = affair["progressing"] + 1
                     last = iter["timestamp"]
                     affair["progressing_days"] = affair["progressing_days"] + iter["timeused"]
             else:

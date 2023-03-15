@@ -89,7 +89,7 @@ if __name__ == '__main__':
         else:
             port = port + 1
 
-    logging.basicConfig(level=logging.WARN,
+    logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
     #update Data Model
     DataVersion(AffairList(),

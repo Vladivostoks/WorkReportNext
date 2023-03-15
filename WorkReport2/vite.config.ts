@@ -22,7 +22,7 @@ export default defineConfig({
     }
   },
   build:{
-    outDir: "../../WorkReportNextBackEnd/static",
+    outDir: "../WorkReport2BackEnd/static",
     emptyOutDir: true
   }
 })

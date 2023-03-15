@@ -13,6 +13,32 @@ let form_option_get_api:MockMethod = {
     url: '/affair',
     method: 'get',
     response: ({ query }) => {
+        let ret = new Array<any>();
+        let i:number
+        for(i=0 ;i<5;i++)
+        {
+            ret.push( {
+                uuid: 'abcdefg',
+                date: new Date('2023-01-30').getTime(),
+                device: ["MCC-165"],
+                name: "测试项目",
+                type: "问题反馈",
+                describe: "这是一个测试项目",
+                person: ["Ayden","aaaa"],
+
+                link_person:["测试人员"],
+                area: "杭州",
+                subtype: ["问题反馈", "产线问题"],
+                period: new Date('2023-10-30').getTime(),
+                url: "svn://123.123.12.1/testcode",
+
+                status: ItemStatus.normal,
+                changeNum: 3,
+                progressing: 5,
+            })
+        }
+        console.dir(ret)
+        return ret;
         return [{
             uuid: 'abcdefg',
             date: new Date('2023-01-30').getTime(),

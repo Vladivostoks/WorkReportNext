@@ -35,7 +35,7 @@ import { usernameSuggest, userLogin, type UserCheckResult } from '@/assets/js/lo
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 import { useCookies } from '@vueuse/integrations/useCookies';
 
-const cookies = useCookies(['user_name', 'user_ip', 'user_status']);
+const cookies = useCookies(['user_name', 'user_ip', 'user_status', 'user_lv']);
 const name:Ref<string> = ref("")
 const user_info = UserInfo()
 let tips:{
@@ -75,13 +75,15 @@ async function login(name:string){
             user_info.user_name = ret.user_name 
             user_info.user_ip = ret.user_ip
             user_info.user_status = USER_STATUS.k_logined
+            user_info.user_lv = ret.user_lv
             user_info.user_group = ret.user_group
 
             // 更新cookie
             cookies.set('user_name', user_info.user_name);
             cookies.set('user_ip', user_info.user_ip);
             cookies.set('user_status', user_info.user_status);
-            cookies.set('user_group', user_info.user_group);
+            cookies.set('user_lv', user_info.user_lv);
+            // cookies.set('user_group', user_info.user_group);
         }
         else
         {

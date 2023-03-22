@@ -29,7 +29,7 @@
       </el-col>
   </el-header>
   <el-container>
-  <el-table :data="tableData" ref="tableRef" max-height="87vh" min-height="87vh" width="100%" :row-style="RowStyleCalc" row-key="uuid">
+  <el-table :data="tableData" ref="tableRef" max-height="87vh" min-height="87vh" width="100%" :row-style="RowStyleCalc" row-key="uuid" sortable>
     <el-table-column type="expand">
       <template #default="props">
         <InfoExpand :data="props.row" 
@@ -38,19 +38,24 @@
                     v-model:status="props.row.status"/>
       </template>
     </el-table-column>
-    <el-table-column prop="date" label="日期" min-width="20%">
+    <el-table-column prop="index" label="序号" min-width="8%">
+      <template #default="scope">
+        <div>{{ scope.$index+1 }}</div>
+      </template>
+    </el-table-column>
+    <el-table-column prop="date" label="日期" min-width="15%">
       <template #default="scope">
         <div style="display:none">{{ scope.row.uuid+',' }}</div>
         <div>{{ useDateFormat(new Date(scope.row.date), 'YYYY-MM-DD', { locales: 'zh-CN' }).value }}</div>
       </template>
     </el-table-column>
-    <el-table-column prop="device" label="型号" min-width="30%" :filters="deviceList" :filter-method="filterTag">
+    <el-table-column prop="device" label="型号" min-width="20%" :filters="deviceList" :filter-method="filterTag">
       <template #default="scope">
       <el-tag :key="iter" v-for="iter in scope.row.device" effect="dark" type="warning">{{ iter }}</el-tag>
       </template>
     </el-table-column>
-    <el-table-column prop="name" label="名称" min-width="20%" />
-    <el-table-column prop="type" label="项目类型" min-width="20%" :filters="typeList" :filter-method="filterTag">
+    <el-table-column prop="name" label="名称" min-width="30%" />
+    <el-table-column prop="type" label="项目类型" min-width="15%" :filters="typeList" :filter-method="filterTag">
       <template #default="scope">
       <el-tag effect="dark" type="danger">{{ scope.row.type }}</el-tag>
       </template>
@@ -60,7 +65,7 @@
         <div class="text">{{ scope.row.describe }}</div>
       </template>
     </el-table-column>
-    <el-table-column prop="status" label="执行状态" min-width="24%" :filters="statusList" :filter-method="filterTag">
+    <el-table-column prop="status" label="执行状态" min-width="15%" :filters="statusList" :filter-method="filterTag">
       <template #default="scope">
       <el-badge v-if="scope.row.changeNum>0" :value="scope.row.changeNum" class="item">
         <el-tag effect="dark" type="info">{{ scope.row.status }}</el-tag>
@@ -90,15 +95,18 @@
     </el-table-column>
   </el-table>
   <ItemEditor v-if="isedit" @FormSubmit="formSubmit" :data="form_data"/>
-  <Export :enable="isexport" :quick="isquick" :data="tableData" @SaveOutputOpt="isexport=false" @DoOutputOpt="isexport=false"/>
+  <Export :export_start = "export_start"
+          :export_end= "export_end"
+  :enable="isexport" :quick="isquick" :data="tableData" @DoOutputOpt="isexport=false"/>
   </el-container>
 </template>
 
 <script lang="ts" setup>
+import { utils } from 'xlsx'
 import { useNow, useDateFormat } from '@vueuse/core'
 import InfoExpand from "@/components/MainView/Body/InfoExpand.vue"
 import type { DetailInfo } from "@/components/MainView/Body/InfoExpand.vue"
-import { nextTick, onMounted, provide, reactive, ref, watch,  } from "vue";
+import { computed, nextTick, onMounted, provide, reactive, ref, watch,  } from "vue";
 import type { Ref,  } from "vue";
 import { ItemStatus } from "@/assets/js/timeline";
 import { DelItems, GetItems, PutItems, type ItemData } from "@/assets/js/itemtable";
@@ -121,6 +129,17 @@ let viewback:Ref<boolean> = ref(false)
 const baseTime:Ref<number> = ref(new Date().getTime());
 /// 关键字搜索
 const search:Ref<string> = ref('');
+  
+const export_start = computed(()=>{
+  const date:Date = new Date(baseTime.value)
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay()).getTime();
+})
+const export_end = computed(()=>{
+  const date:Date = new Date(baseTime.value)
+  const start:number = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay()).getTime();
+  return start+ 3600 * 1000 * 24 * 7;
+})
+
 /// 普通模式下更新表格内容
 async function NormalUpdateTable(){
   const date:Date = new Date(baseTime.value)
@@ -129,6 +148,7 @@ async function NormalUpdateTable(){
   let data:ItemData[] = await GetItems(start, end, false, true);
   let user_info = UserInfo()
 
+  console.dir(user_info)
   //根据属性进行过滤
   if(user_info.user_lv == USER_TYPE.normalize)
   {
@@ -139,6 +159,7 @@ async function NormalUpdateTable(){
     }))
   }
 
+  console.dir(data)
   //检查当前的模式
   switch(route.params.tableMode)
   {
@@ -153,7 +174,7 @@ async function NormalUpdateTable(){
     case TableContentType.LeftItem:
       //只留未完成
       tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
-        if(iter.type == ItemStatus.successed || iter.type == ItemStatus.stop)
+        if(iter.status == ItemStatus.successed || iter.status == ItemStatus.stop)
           return false
         return true;
       }))
@@ -161,7 +182,7 @@ async function NormalUpdateTable(){
     case TableContentType.HistoryItem:
       //只留已完成
       tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
-        if(iter.type == ItemStatus.successed || iter.type == ItemStatus.stop)
+        if(iter.status == ItemStatus.successed || iter.status == ItemStatus.stop)
           return true;
         return false
       }))
@@ -169,6 +190,8 @@ async function NormalUpdateTable(){
     default:
       break;
   }
+
+  console.dir(tableData.value)
 }
 
 

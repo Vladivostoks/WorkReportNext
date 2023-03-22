@@ -16,7 +16,7 @@ let user_check_api:MockMethod = {
         ret: true,
         user_name:  "Ayden",
         user_ip:    "127.0.0.1",
-        user_lv:    0,
+        user_lv:    "normalizer",
         user_token: "qdqwnfaskdjqwje123jb1b2kda=",
       }
       return {

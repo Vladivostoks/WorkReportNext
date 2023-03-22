@@ -29,11 +29,11 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="导出项目类型" prop="types">
+        <el-form-item label="过滤项目类型" prop="types">
           <el-select
             v-model="form.types"
             multiple
-            placeholder="请选择仅导出的项目类型"
+            placeholder="请选择过滤的项目类型"
           >
             <el-option
               v-for="item in typesSet"
@@ -43,11 +43,11 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="导出人员名单" prop="persons">
+        <el-form-item label="过滤人员名单" prop="persons">
           <el-select
             v-model="form.persons"
             multiple
-            placeholder="请选择仅导出的项目类型"
+            placeholder="请选择过滤的项目类型"
           >
             <el-option
               v-for="item in personSet"
@@ -66,7 +66,7 @@
             placeholder="可选变量:处理人员-{name} 关联人员-{link_name} 时间戳-{timestamp} 执行内容-{content} 执行结果-{result}"/>
         </el-form-item>
 
-        <el-form-item label="导出时间区间" prop="describe" v-if="!prop.quick">
+        <el-form-item label="导出时间区间" prop="describe">
           <el-date-picker
             v-model="form.daterange"
             type="daterange"
@@ -75,6 +75,7 @@
             start-placeholder="起始时间"
             end-placeholder="结束时间"
             :shortcuts="shortcuts"
+            value-format="x"
             size="small"
           />
         </el-form-item>
@@ -84,7 +85,7 @@
           <el-button @click=" emit('DoOutputOpt'); ">取消</el-button>
           <el-button type="success" @click="SaveOutputOpt" :disabled="optionType!='默认'">新增配置</el-button>
           <el-button type="danger" @click="DelOutputOpt" :disabled="optionType=='默认'">删除配置</el-button>
-          <el-button type="primary" @click="emit('DoOutputOpt');">导出</el-button>
+          <el-button type="primary" @click="AutoXlsExport(); emit('DoOutputOpt');">导出</el-button>
           </span>
       </template>
     </el-dialog>
@@ -92,23 +93,25 @@
     
     
 <script lang="ts" setup>
-import { utils } from 'xlsx'
+import FileSaver from "file-saver";
+import { utils, write, type WorkSheet } from 'xlsx'
 // @ts-ignore 
-import xlstyle from 'xlsx-style-vite'
 import { computed, onBeforeUnmount, onBeforeUpdate, onMounted, onUpdated, reactive, ref, watch, type Ref } from 'vue'
-import type { BaseItemData, ExpandItemData, ItemData } from "@/assets/js/itemtable"
+import { GetItems, type BaseItemData, type ExpandItemData, type ItemData } from "@/assets/js/itemtable"
 import { OPTION_TYPE, GetOption } from "@/assets/js/itemform"
 import { UserInfo, USER_STATUS } from '@/stores/counter';
-import _, { each } from 'lodash'
+import _, { each, indexOf } from 'lodash'
 import {v4 as uuidv4} from 'uuid';
 import type { FormRules } from 'element-plus/es/tokens/form';
 import type { FormInstance } from 'element-plus/es/components/form';
 import { useStorage, type RemovableRef } from '@vueuse/core'
 import { ElMessage, ElMessageBox, valueEquals } from 'element-plus'
+import { GetWeekIndex, GetWeekInterval } from '@/assets/js/common'
+import { ItemStatus, RpcGetTimeline, type TimelineInfo } from "@/assets/js/timeline";
    
 export interface ExportOpt {
   // Excel列表单项目
-  excel_option: string[],
+  excel_option: Array<keyof ItemData>,
   // 导出项目类型
   types: string[],
   // 导出人员名单
@@ -125,6 +128,9 @@ interface ExportParam{
   // 导出内容
   data:ItemData[],
   exportOpt?: ExportOpt,
+  // 导出时间线的范围
+  export_start:number,
+  export_end:number,
 };
     
 const prop = defineProps<ExportParam>()
@@ -138,7 +144,7 @@ watch(prop, (newprop) => {
     let tableDom = document.querySelector(".el-table__body-wrapper table");
     let tempSheet = utils.table_to_book(tableDom).Sheets.Sheet1;
 
-    console.dir(tempSheet)
+    // console.dir(tempSheet)
   }
 })
 
@@ -204,6 +210,282 @@ function DelOutputOpt()
   }
 }
 
+type outputList = {
+  opt: keyof ItemData,
+  name: string,
+  header_func?: ()=>string,
+  content_func?: (value:ItemData)=>string | Promise<string>,
+};
+
+const OutputMap:outputList[] = [{
+    opt: "uuid",
+    name:"具体内容",
+    header_func: ():string=> {
+      const date = new Date(form.value.daterange[0]); 
+      return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`
+    },
+    content_func: async (value:ItemData):Promise<string>=> {
+      console.dir(form.value.daterange)
+      let res:TimelineInfo[] = await RpcGetTimeline(value.uuid,form.value.daterange[0],form.value.daterange[1])
+      let content:string=""; 
+
+      res.forEach(value=>{
+        let temp_content:string = form.value.format;
+        let re = /\$\{timestamp\}/gi;
+        temp_content = temp_content.replace(re, new Date(value.timestamp).toISOString()); 
+        re = /\$\{name\}/gi;
+        temp_content = temp_content.replace(re, value.author); 
+        re = /\$\{content\}/gi;
+        temp_content = temp_content.replace(re, value.progress); 
+        re = /\$\{result\}/gi;
+        temp_content = temp_content.replace(re, value.result); 
+
+        content += temp_content+"\r\n\r\n";
+      })
+      
+      return content;
+    }
+  },{
+    opt: "date",
+    name:"创建时间",
+    content_func: (value:ItemData):string=> { const date = new Date(value.date); return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`}
+  },{
+    opt: "device",
+    name:"设备型号",
+  },{
+    opt: "name",
+    name:"项目名称",
+  },{
+    opt: "type",
+    name:"项目类型",
+  },{
+    opt: "describe",
+    name:"项目描述",
+  },{
+    opt: "person",
+    name: "负责人",
+    content_func: (value:ItemData):string=> { 
+      let ret:string="";
+      value.person.forEach((value)=>
+      {
+        ret += value+' '
+      })
+
+      return ret; 
+    }
+  },{
+    opt: "link_person",
+    name: "关联人员",
+    content_func: (value:ItemData):string=> { 
+      let ret:string="";
+      value.person.forEach((value)=>
+      {
+        ret += value+' '
+      })
+
+      return ret; 
+    }
+  },{
+    opt: "area",
+    name: "区域/阶段",
+  },{
+    opt: "subtype",
+    name: "子类型",
+    content_func: (value:ItemData):string=> { 
+      let ret:string="";
+      value.person.forEach((value)=>
+      {
+        ret += value+' '
+      })
+
+      return ret; 
+    }
+  },{
+    opt: "period",
+    name: "预计周期",
+    content_func: (value:ItemData):string=> { 
+
+      const interval = GetWeekInterval(value.date, value.period)
+      const pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
+      const pass_interval = GetWeekInterval(value.date,new Date().getTime());
+
+      return String(pass_interval<=0?1:pass_interval)+"周/"+String(interval<=0?1:interval)+"周("+pass_per+"%)"
+    }
+  },{
+    opt: "period",
+    name: "进度(%)",
+    content_func: (value:ItemData):string=> { 
+      const interval = GetWeekInterval(value.date, value.period)
+      const pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
+
+      return String(pass_per)
+    }
+  },{
+    opt: "url",
+    name: "项目路径",
+  },{
+    opt: "status",
+    name: "项目状态(百分比)",
+    content_func: (value:ItemData):string=> { 
+      const interval = GetWeekInterval(value.date, value.period)
+      const pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
+
+      return `${value.status}(${String(pass_per)}%)`
+    }
+  },{
+    opt: "status",
+    name: "项目状态",
+}]
+
+/// 进行xls导出
+async function AutoXlsExport(){
+  ///step1:根据配置筛选本周的列
+  let xls_header:string[] = [];
+
+  form.value.excel_option.forEach((value: string)=>{
+    for(const i in OutputMap)
+    {
+      if(value === OutputMap[i].name)
+      {
+        if(OutputMap[i].header_func)
+        {
+          xls_header.push(OutputMap[i].header_func!())
+        }
+        else
+        {
+          xls_header.push(OutputMap[i].name)
+        }
+        break;
+      }
+    }
+  })
+
+  ///step2:获取信息并插入值
+  let data:ItemData[] = await GetItems(prop.export_start, prop.export_end, false, true);
+
+  ///step3:先根据总规则过滤类型和人员，根据三种规则分别筛选data,并插入到列表 
+  data = data.filter(item => {
+    let flag = false;
+    //人员过滤
+    item.person.forEach(value=>{
+      if(indexOf(form.value.persons, value) >= 0)
+      {
+        flag = true;
+      }
+    })
+
+    //类型过滤
+    if(indexOf(form.value.types, item.type) >= 0
+    || flag)
+    {
+      return false;
+    }
+    return true;
+  })
+
+  // 创建一个工作簿对象
+  let wb = utils.book_new();
+  
+  let wbfun = async (data:ItemData[],sheet_name:string,filerFun:(value:ItemData)=>boolean)=>{
+    let sheet_all_data:Array<string|number>[] = [xls_header]
+    const temp_data:ItemData[] = _.cloneDeep(data.filter(value=>{
+      return filerFun(value)
+    }))
+
+    for(const i in temp_data)
+    {
+      let sheet_data:Array<string|number> = []
+      for(const j in form.value.excel_option)
+      {
+        for(const k in OutputMap)
+        {
+          if(form.value.excel_option[j] == OutputMap[k].name)
+          {
+            if(OutputMap[k].content_func)
+            {
+              sheet_data.push(await OutputMap[k].content_func!(temp_data[i]))
+            }
+            else
+            {
+              sheet_data.push(String(temp_data[i][OutputMap[k].opt]))
+            }
+            break;
+          }
+        }
+      }
+      sheet_all_data.push(sheet_data)
+    }
+    // 创建一个工作表对象
+    const ws:WorkSheet = utils.aoa_to_sheet(sheet_all_data);
+
+    Object.keys(ws).forEach((key)=>{
+      if(key.indexOf('!')<0
+      && key.indexOf(':')<0)
+      {
+        if(key.indexOf('1')>0)
+        {
+          ws[key].s = {
+            fill: {
+              fgColor: { rgb: 'FFA3F4B1' }
+            },
+            alignment:{
+              horizontal: 'center',
+              vertical: 'center',
+              wrapText: true,
+            }
+          }
+        }
+        else
+        {
+          ws[key].s = {
+            alignment:{
+              horizontal: 'center',
+              vertical: 'center',
+              wrapText: true,
+            }
+          }
+        }
+      }
+    })
+
+    // 将工作表添加到工作簿中
+    utils.book_append_sheet(wb, ws, sheet_name);
+  };
+
+  await wbfun(data, "本周新增", (iter)=>{
+    if(iter.date>=prop.export_start && iter.date<=prop.export_end)
+      return true;
+    return false;
+  })
+
+  await wbfun(data, "已完成", (iter)=>{
+    if(iter.status == ItemStatus.successed || iter.status == ItemStatus.stop)
+      return true;
+    return false;
+  })
+
+  await wbfun(data, "未完成", (iter)=>{ 
+    if((iter.status == ItemStatus.successed || iter.status == ItemStatus.stop)
+    || (iter.date>=prop.export_start && iter.date<=prop.export_end))
+    {
+      return false;
+    }
+    return true;
+  })
+
+  // 将工作簿保存为 xlsx 文件
+  var wbout = write(wb, {
+    bookType: "xlsx",
+    bookSST: true,
+    type: "array",
+  });
+
+  FileSaver.saveAs(
+    new Blob([wbout], { type: "application/octet-stream" }),
+    `第${GetWeekIndex(new Date().getTime())[0]}周周报.xlsx`
+  );
+}
+
 /// 保持本地配置
 function SaveOutputOpt()
 {
@@ -237,74 +519,9 @@ type List = {
 function CreateXlsOpt():List[]
 {
   let ret:List[] = [];
-  for(const key in prop.data[0])
-  {
-    switch(key)
-    {
-      case 'uuid':{
-        break;
-      }
-      case 'date':{
-        ret.push({ text: '日期', value: key, })
-        break;
-      }
-      case 'device':{
-        ret.push({ text: '设备型号', value: key, })
-        break;
-      }
-      case 'name':{
-        ret.push({ text: '项目名称', value: key, })
-        break;
-      }
-      case 'type':{
-        ret.push({ text: '项目类型', value: key, })
-        break;
-      }
-      case 'describe':{
-        ret.push({ text: '项目简介', value: key, })
-        break;
-      }
-      case 'person':{
-        ret.push({ text: '处理人员', value: key, })
-        break;
-      }
-      case 'link_person':{
-        ret.push({ text: '关联人员', value: key, })
-        break;
-      }
-      case 'area':{
-        ret.push({ text: '区域/阶段', value: key, })
-        break;
-      }
-      case 'subtype':{
-        ret.push({ text: '项目子类型', value: key, })
-        break;
-      }
-      case 'period':{
-        ret.push({ text: '项目周期', value: key, })
-        break;
-      }
-      case 'url':{
-        ret.push({ text: '项目路径', value: key, })
-        break;
-      }
-      case 'status':{
-        ret.push({ text: '项目状态', value: key, })
-        break;
-      }
-      case 'changeNum':{
-        break;
-      }
-      case 'progressing':{
-        ret.push({ text: '项目进度', value: key, })
-        break;
-      }
-      default:
-    }
-  }
-
-  ret.push({ text: '项目状态(百分比)', value: 'status,progressing', })
-  ret.push({ text: '项目具体内容', value: 'content', })
+  OutputMap.forEach(value=>{
+    ret.push({ text: value.name, value: value.name })
+  })
 
   return ret;
 }

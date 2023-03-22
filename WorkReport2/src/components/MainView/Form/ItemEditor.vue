@@ -276,7 +276,7 @@ const rules = reactive<FormRules>({
 })
 
 function CheckPeriod(rule: any, value: any, callback: any){
-  if(value < (new Date().getTime()-1000*60*60*24))
+  if(value < (new Date().getTime()-1000*60*60*24) && !prop.data)
   {
     callback(new Error('项目结束时间要晚于今天'))
   }

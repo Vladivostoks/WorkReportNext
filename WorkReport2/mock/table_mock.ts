@@ -32,12 +32,11 @@ let form_option_get_api:MockMethod = {
                 period: new Date('2023-10-30').getTime(),
                 url: "svn://123.123.12.1/testcode",
 
-                status: ItemStatus.normal,
+                status: ItemStatus.successed,
                 changeNum: 3,
                 progressing: 5,
             })
         }
-        console.dir(ret)
         return ret;
         return [{
             uuid: 'abcdefg',

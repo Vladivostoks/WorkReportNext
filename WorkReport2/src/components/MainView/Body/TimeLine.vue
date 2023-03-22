@@ -54,7 +54,7 @@
               size="small"
               v-model="new_timeline.progress"
               :autosize="{ minRows: 2, maxRows: 5}"
-              placeholder="输入项目进度记录实施内容"
+              placeholder="输入项目进度记录实施内容:本周实施事项，如:进行xx功能开发，提交xx测试，修复xx缺陷等"
               style="width:100%">
               </el-input>
           </el-form-item>
@@ -64,7 +64,7 @@
               size="small"
               v-model="new_timeline.result"
               :autosize="{ minRows: 2, maxRows: 5}"
-              placeholder="输入项目进度记录实施结果"
+              placeholder="输入项目进度记录实施结果:明确实施事项结果，已完成的明确已完成，未完成的明确是否还要继续，如果继续，计划是如何"
               style="width:100%">
               </el-input>
           </el-form-item>

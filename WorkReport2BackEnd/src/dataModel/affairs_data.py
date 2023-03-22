@@ -47,6 +47,9 @@ class AffairContent(DataModel):
                                     WHERE timestamp >= %(start_time)d and timestamp <= %(end_time)d
                                     ORDER BY index_num;"""
 
+    # 获取最后一条
+    __SEARCH_LAST_CONTENT = """SELECT * FROM "%(affair_id)s" ORDER BY timestamp DESC LIMIT 1"""
+
     # 插入数据
     __ADD_CONTENT = """INSERT INTO '%(affair_id)s' (timestamp,progress,result,status,timeused,percent,author)
                        VALUES('%(timestamp)d','%(progress_content)s','%(progress_result)s','%(project_status)s','%(timeused)f','%(percent)d','%(author)s');
@@ -238,9 +241,9 @@ class AffairContent(DataModel):
                 #start_time = time.mktime(time.strptime(start_time, "%Y-%m-%d"))
                 #end_time = time.mktime(time.strptime(end_time, "%Y-%m-%d"))
                 # 执行记录前端输入的戳带毫秒
-                cursor.execute(self.__SEARCH_CONTENT_WITH_TIME % {"affair_id":self.__affair_id,
-                                                                  "start_time":0,
-                                                                  "end_time":time.time()*1000})
+                cursor.execute(self.__SEARCH_LAST_CONTENT % {"affair_id":self.__affair_id,
+                                                             "start_time":0,
+                                                             "end_time":time.time()*1000})
             result = cursor.fetchone()
             cursor.close()
         except sqlite3.Error as e:
@@ -318,7 +321,8 @@ class AffairList(DataModel):
                                  """
     # 按照更新时间去去查找
     __SEARCH_AFFAIRS_WITH_UPDATE_TIME = """SELECT * FROM %(affair_list_table)s 
-                                           WHERE lastupdate_date >= %(start_time)d and lastupdate_date <= %(end_time)d
+                                           WHERE (lastupdate_date >= %(start_time)d and date <= %(end_time)d)
+                                           OR (status != '已终止' and status != '已完成' and date < %(end_time)d) ORDER BY date
                                         """
     # 更新数据的最后更新时间和状态
     __UPDATE_UPDATE_TIME = "UPDATE %(affair_list_table)s SET lastupdate_date = %(lastupdate_date)d, status = '%(status)s' WHERE uuid = '%(uuid)s';"
@@ -553,6 +557,15 @@ class AffairList(DataModel):
             if 0:
                 pass
             else:
+                # # 创建时间在end前，更新时间在start后，
+                # if time.time()*1000 >= start_time and time.time()*1000 <= end_time:
+                #     #本周
+                #     pass
+                # else:
+                #     #回溯,去掉创建时间在endtime后的，以及最后更新时间在starttime之前的项目,并且
+                #     pass
+
+
                 # 时间范围为最后更新时间还是创建时间a,TODO:增加项目状态判断
                 sql = self.__SEARCH_AFFAIRS_WITH_UPDATE_TIME
 
@@ -561,9 +574,6 @@ class AffairList(DataModel):
                     # 归档项目
                     if other_param["isupdatetime"] != 'true': 
                         sql = self.__SEARCH_AFFAIRS_WITH_TIME
-                else:
-                    # 非归档项目
-                    sql += f"or (status != '已终止' and status != '已完成' and date < {end_time:d})"
 
                 cursor.execute(sql % {"affair_list_table":self.__table_name,
                                       "start_time":start_time,

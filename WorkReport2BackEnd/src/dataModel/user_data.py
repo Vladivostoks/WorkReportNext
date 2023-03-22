@@ -36,6 +36,8 @@ class UserData(DataModel):
     #更新:更新用户指纹
     # __UPDATE_USER_TOKEN = "REPLACE INTO %(user_table)s(user_name,user_ip,user_token) VALUES('%(username)s','%(user_ip)s','%(user_token)s')"
     __UPDATE_USER_TOKEN = "UPDATE %(user_table)s SET user_ip = '%(user_ip)s', user_token = '%(user_token)s' WHERE user_name = '%(username)s';"
+    #清除用户指纹
+    __CLEAN_USER_TOKEN = "UPDATE %(user_table)s SET user_ip = NULL, user_token = NULL WHERE user_name = '%(username)s';"
     #计数用户总数
     __COUNT_USER = 'SELECT COUNT(user_name) FROM %(user_table)s WHERE user_prop = "%(prop)s"'
     #插入/修改用户
@@ -105,6 +107,22 @@ class UserData(DataModel):
                                                  "prop":prop,
                                                  "passwd":passwd,
                                                  "user_group":group if group else "default"})
+
+            cursor.close()
+            self.__db.commit()
+
+        except sqlite3.Error as e:
+            logging.error(e)
+            return False
+
+        return True
+
+    #清除用户登录缓存
+    def user_clean(self,username):
+        try:
+            cursor = self.__db.cursor()
+            cursor.execute(self.__CLEAN_USER_TOKEN % {"user_table":self.__table_name,
+                                                      "username":username})
 
             cursor.close()
             self.__db.commit()

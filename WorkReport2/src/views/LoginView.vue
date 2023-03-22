@@ -60,7 +60,7 @@ import SuperInit from '@/components/LoginView/SuperInit.vue'
 
 let user_info = UserInfo()
 const router = useRouter()
-const cookies = useCookies(['user_name', 'user_ip', 'user_status']);
+const cookies = useCookies(['user_name', 'user_ip', 'user_status', 'user_lv']);
 
 onMounted(async () => {
     //step1: 后台判断系统是否初始化
@@ -86,7 +86,8 @@ onMounted(async () => {
                 cookies.set('user_name', user_info.user_name);
                 cookies.set('user_ip', user_info.user_ip);
                 cookies.set('user_status', user_info.user_status);
-                cookies.set('user_group', user_info.user_group);
+                cookies.set('user_lv', user_info.user_lv);
+                // cookies.set('user_group', user_info.user_group);
             }
         })
     }

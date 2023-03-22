@@ -123,6 +123,23 @@ class User(Resource):
 
 #登陆相关操作
 class Login(Resource):
+    def delete(self):
+        put_parser = reqparse.RequestParser()
+        put_parser.add_argument('username', dest='username',
+                                 type=str, location='json',
+                                 required=True, help='Need input username for user add.')
+        
+        req = put_parser.parse_args()
+
+        USER_TABLE_LOCK.acquire()
+        ret = user_data.UserData().user_clean(**req)
+        USER_TABLE_LOCK.release()
+
+        if not ret:
+            return False, 200
+        else:
+            return True, 200
+
     def put(self):
         put_parser = reqparse.RequestParser()
         put_parser.add_argument('username', dest='username',

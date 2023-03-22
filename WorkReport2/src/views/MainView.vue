@@ -30,18 +30,20 @@ import { useCookies } from '@vueuse/integrations/useCookies'
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 import { useRoute, useRouter } from 'vue-router';
 
-const cookies = useCookies(['user_name', 'user_ip', 'user_status']);
+const cookies = useCookies(['user_name', 'user_ip', 'user_status', 'user_lv']);
 const router = useRouter()
 onBeforeMount(()=>{
     //检查cookie，设置store
     if(cookies.get('user_name')
     && cookies.get('user_ip')
+    && cookies.get('user_lv')
     && cookies.get('user_status'))
     {
         let user_info = UserInfo()
 
         user_info.user_name = cookies.get('user_name')
         user_info.user_ip   = cookies.get('user_ip')
+        user_info.user_lv   = cookies.get('user_lv')
         user_info.user_status = cookies.get('user_status')   
     }
 })
@@ -51,6 +53,7 @@ onMounted(()=>{
     self.setInterval(()=>{
         if(!cookies.get('user_name')
         || !cookies.get('user_ip')
+        || !cookies.get('user_lv')
         || !cookies.get('user_status'))
         {
             //回到注册页

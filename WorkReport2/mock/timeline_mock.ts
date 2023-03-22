@@ -5,7 +5,6 @@ let timeline_get_api = {
   method: 'get',
   response: () => {
     //核验body
-      return []
       return [{
                  timestamp: new Date().getTime(),
                  progress: "1. 完成测试1\r\n2. 完成测试2\r\n",

@@ -133,11 +133,17 @@ class Affairs(Resource):
             AFFAIR_CONTENT_DATA_DB_LOCK.acquire()
             # 查询具体事件时间线
             timeline = affairs_data.AffairContent(affair["uuid"]).search_record(affair["date"], req["end_time"])
+            last_one = affairs_data.AffairContent(affair["uuid"]).search_latest_record()
             AFFAIR_CONTENT_DATA_DB_LOCK.release()
             # TODO: 填充 `status` `changeNum` `progressing`三个字段的
             if len(timeline)>0:
-                # 根据最后一次时间线事件的状态赋值
-                affair["status"] = timeline[-1]["status"]
+                # 根据最后一次时间线事件的状态赋值,如果是修改前的，并且本周有更新，那么不进行处理，还是用affair中的结果
+                if (affair["status"] == "已完成" or affair["status"] == "已终止")\
+                   and timeline[-1]["timestamp"]>req["start_time"] \
+                   and timeline[-1]["timestamp"]==last_one["timestamp"]:
+                   pass
+                else:
+                    affair["status"] = timeline[-1]["status"]
                 # 根据当前时间线范围内，过了几周进行计算，不管每周做了多少天
                 affair["changeNum"] = 0
                 affair["progressing"] = 0

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.0.10",
+    "@types/file-saver": "^2.0.5",
     "@types/uuid": "^9.0.1",
     "@types/xlsx": "^0.0.36",
     "@vueuse/core": "^9.11.1",
@@ -19,6 +20,7 @@
     "dhtmlx-gantt": "^7.1.13",
     "echarts": "^5.4.1",
     "element-plus": "^2.2.28",
+    "file-saver": "^2.0.5",
     "mockjs": "^1.1.0",
     "pinia": "^2.0.28",
     "universal-cookie": "^4.0.4",

@@ -10,7 +10,7 @@ let form_option_get_api = {
                 return ["X1A1", "B1A1"]
             }
             case "prjtype_opt":{
-                return ["Baseline", "Custom", "Issuse"]
+                return ["问题反馈"]
             }
             case "prjsubtype_opt":{
                 return ["产线问题", "组件开发", "版本开发"]

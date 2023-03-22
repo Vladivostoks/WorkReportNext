@@ -143,6 +143,38 @@ async function userLogin(name:string):Promise<UserCheckResult|boolean>
 }
 
 /**
+ * 普通用户登出
+ * @param name 
+ * @returns 
+ */
+async function userLogout(name:string):Promise<boolean>
+{
+    let ret:boolean = false;
+
+    //核验登陆
+    await axios({
+        url:'/login',
+        method: 'delete',
+        timeout: 2000,
+        responseType: 'json',
+        responseEncoding: 'utf8', 
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        data:{
+            username:name
+        }
+    }).then((res) => {
+        ret = res.data
+    }).catch((res)=>{
+        console.dir(res);
+        throw new AxiosError(res);        
+    });
+
+    return ret;
+}
+
+/**
  * 增加新用户
  * @param name 
  * @param passwd 
@@ -180,5 +212,5 @@ async function userAdd(name:string,passwd:string,usertype:USER_TYPE,usergroup:st
 }
 
 
-export { hasSuperUser, userCheck, usernameSuggest, userLogin, userAdd }
+export { hasSuperUser, userCheck, usernameSuggest, userLogin, userLogout, userAdd }
 

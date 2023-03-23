@@ -137,27 +137,34 @@ class Affairs(Resource):
             AFFAIR_CONTENT_DATA_DB_LOCK.release()
             # TODO: 填充 `status` `changeNum` `progressing`三个字段的
             if len(timeline)>0:
-                # 根据最后一次时间线事件的状态赋值,如果是修改前的，并且本周有更新，那么不进行处理，还是用affair中的结果
-                if (affair["status"] == "已完成" or affair["status"] == "已终止")\
+                if last_one["timestamp"]<req["start_time"]:
+                # 最后一条的时间戳比star还要早，那么显示为暂停中
+                    affair["status"] = "暂停中"
+                elif (affair["status"] == "已完成" or affair["status"] == "已终止")\
                    and timeline[-1]["timestamp"]>req["start_time"] \
                    and timeline[-1]["timestamp"]==last_one["timestamp"]:
-                   pass
+                # 根据最后一次时间线事件的状态赋值,如果是修改前的，并且本周有更新，那么不进行处理，还是用affair中的结果
+                    pass
                 else:
                     affair["status"] = timeline[-1]["status"]
+                
                 # 根据当前时间线范围内，过了几周进行计算，不管每周做了多少天
                 affair["changeNum"] = 0
                 affair["progressing"] = 0
                 affair["progressing_days"] = 0
-                last = 0
+                bloom = [False] * 1000
                 for iter in timeline:
                     # 超过一周计数
                     if(iter["timestamp"]-req["start_time"]) >= 0:
                         affair["changeNum"] = affair["changeNum"]+1
 
-                    if (iter["timestamp"] - last) > (7*24*3600*1000):
-                        affair["progressing"] = affair["progressing"] + 1
-                    last = iter["timestamp"]
+                    # 布隆过滤
+                    index = int((iter["timestamp"] - affair["date"]) / (7*24*3600*1000))
+                    bloom[index] = True
                     affair["progressing_days"] = affair["progressing_days"] + iter["timeused"]
+                for iter in bloom:
+                    if iter:
+                        affair["progressing"] = affair["progressing"] + 1
             else:
                 affair["status"] = "" 
                 affair["changeNum"] = 0

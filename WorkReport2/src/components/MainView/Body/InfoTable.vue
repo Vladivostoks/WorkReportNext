@@ -397,7 +397,7 @@ watch(route, (newroute) => {
 
 //监听时间戳是不是本周
 watch(baseTime, (newbaseTime) => {
-  viewback.value = GetWeekIndex(newbaseTime)[0] != GetWeekIndex(new Date().getTime())[0] 
+  viewback.value = (GetWeekIndex(newbaseTime)[0]+1) != GetWeekIndex(new Date().getTime())[0] 
                 || GetWeekIndex(newbaseTime)[1] != GetWeekIndex(new Date().getTime())[1];
   //变更集合
   UpdateTableContent();

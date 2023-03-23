@@ -12,7 +12,7 @@
       <el-tag class="mx-1" size="small"
               :key="iter" v-for="iter in prop.data.link_person" type="success">{{ iter }}</el-tag>
     </el-descriptions-item>
-    <el-descriptions-item label="已执行/预计用时">
+    <el-descriptions-item label="已执行:预计用时/实际时长">
       <el-tag class="mx-1" size="small" type="danger">{{ time_compare }}</el-tag>
     </el-descriptions-item>
     <el-descriptions-item label="svn/git">
@@ -61,7 +61,7 @@ const time_compare:ComputedRef<string> = computed(():string=>{
   const pass_per = Math.round(prop.data.progressing/(interval<=0?1:interval)*100)
   const pass_interval = GetWeekInterval(prop.data.date,new Date().getTime());
 
-  return String(pass_interval<=0?1:pass_interval)+"周/"+String(interval<=0?1:interval)+"周("+pass_per+"%)"
+  return String(prop.data.progressing)+"周:"+String(interval<=0?1:interval)+"周/"+String(pass_interval<=0?1:pass_interval)+"周("+pass_per+"%)"
 })
 
 function CopyUrl()

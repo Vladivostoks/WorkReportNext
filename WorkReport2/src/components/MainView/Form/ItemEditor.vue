@@ -198,7 +198,7 @@ const form:ItemData = prop.data?reactive(_.cloneDeep(prop.data)):reactive({
     //项目子类型
     subtype: [],
     //项目预计周期
-    period: new Date().getTime(),
+    period: new Date().getTime()+2*7*24*3600*1000,
     //项目路径
     url: "",
 

@@ -306,9 +306,10 @@ const OutputMap:outputList[] = [{
     content_func: (value:ItemData):string=> { 
 
       const interval = GetWeekInterval(value.date, value.period)
-      const pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
-      const pass_interval = GetWeekInterval(value.date,new Date().getTime());
+      let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
+      const pass_interval = GetWeekInterval(value.date,new Date().getTime())
 
+      pass_per = pass_per>100?100:pass_per
       return String(pass_interval<=0?1:pass_interval)+"周/"+String(interval<=0?1:interval)+"周("+pass_per+"%)"
     }
   },{
@@ -316,8 +317,9 @@ const OutputMap:outputList[] = [{
     name: "进度(%)",
     content_func: (value:ItemData):string=> { 
       const interval = GetWeekInterval(value.date, value.period)
-      const pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
+      let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
 
+      pass_per = pass_per>100?100:pass_per
       return String(pass_per)
     }
   },{
@@ -328,8 +330,9 @@ const OutputMap:outputList[] = [{
     name: "项目状态(百分比)",
     content_func: (value:ItemData):string=> { 
       const interval = GetWeekInterval(value.date, value.period)
-      const pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
+      let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
 
+      pass_per = pass_per>100?100:pass_per
       return `${value.status}(${String(pass_per)}%)`
     }
   },{

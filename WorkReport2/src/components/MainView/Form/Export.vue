@@ -278,7 +278,7 @@ const OutputMap:outputList[] = [{
     name: "关联人员",
     content_func: (value:ItemData):string=> { 
       let ret:string="";
-      value.person.forEach((value)=>
+      value.link_person?.forEach((value)=>
       {
         ret += value+' '
       })
@@ -304,13 +304,10 @@ const OutputMap:outputList[] = [{
     opt: "period",
     name: "预计周期",
     content_func: (value:ItemData):string=> { 
-
       const interval = GetWeekInterval(value.date, value.period)
-      let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
       const pass_interval = GetWeekInterval(value.date,new Date().getTime())
 
-      pass_per = pass_per>100?100:pass_per
-      return String(pass_interval<=0?1:pass_interval)+"周/"+String(interval<=0?1:interval)+"周("+pass_per+"%)"
+      return String(pass_interval<=0?1:pass_interval)+"周/"+String(interval<=0?1:interval)+"周"
     }
   },{
     opt: "period",
@@ -320,6 +317,7 @@ const OutputMap:outputList[] = [{
       let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
 
       pass_per = pass_per>100?100:pass_per
+      pass_per = (value.status == ItemStatus.successed)?100:pass_per
       return String(pass_per)
     }
   },{
@@ -333,6 +331,7 @@ const OutputMap:outputList[] = [{
       let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
 
       pass_per = pass_per>100?100:pass_per
+      pass_per = (value.status == ItemStatus.successed)?100:pass_per
       return `${value.status}(${String(pass_per)}%)`
     }
   },{
@@ -462,7 +461,8 @@ async function AutoXlsExport(){
   })
 
   await wbfun(data, "已完成", (iter)=>{
-    if(iter.status == ItemStatus.successed || iter.status == ItemStatus.stop)
+    if((iter.status == ItemStatus.successed || iter.status == ItemStatus.stop)
+    && !(iter.date>=prop.export_start && iter.date<=prop.export_end))
       return true;
     return false;
   })

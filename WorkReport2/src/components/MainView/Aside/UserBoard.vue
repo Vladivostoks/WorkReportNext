@@ -19,15 +19,15 @@ default-active="2"
             <el-menu-item index="1-3">已完成</el-menu-item>
         </router-link>
     </el-sub-menu>
-    <!-- <el-sub-menu index="0">
+    <el-sub-menu index="0">
         <template #title>
             <el-icon><MessageBox /></el-icon>
             <span>项目归档</span>
         </template>
         <router-link :to="{name: 'table', params: { tableMode:TableContentType.Repository}}">
-            <el-menu-item index="0-1">归档记录</el-menu-item>
+            <el-menu-item index="0-1">历史记录</el-menu-item>
         </router-link>
-    </el-sub-menu> -->
+    </el-sub-menu>
     <!-- <el-sub-menu index="2">
         <template #title>
             <el-icon><IceDrink /></el-icon>
@@ -44,13 +44,15 @@ default-active="2"
         <el-menu-item index="2-2">季度统计</el-menu-item>
         <el-menu-item index="2-3">年度统计</el-menu-item>
     </el-sub-menu> -->
-    <el-sub-menu index="3">
+    <!-- <el-sub-menu index="3">
         <template #title>
             <el-icon><Setting /></el-icon>
             <span>系统管理</span>
         </template>
-        <el-menu-item index="3-1">用户管理</el-menu-item>
-    </el-sub-menu>
+        <router-link :to="{name: 'manager'}">
+            <el-menu-item index="3-1">用户管理</el-menu-item>
+        </router-link>
+    </el-sub-menu> -->
 </el-menu>
 </template>
 

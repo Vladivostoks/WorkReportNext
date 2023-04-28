@@ -8,13 +8,14 @@
               value-format="x"
               placeholder="基准时间"/>
         <el-radio-group v-else v-model="checkWithCreateTimeStamp" size="large">
-          <el-radio-button :label="true">创建时间</el-radio-button>
-          <el-radio-button :label="false">完成时间</el-radio-button> 
+          <el-radio-button :label="false">创建时间</el-radio-button>
+          <el-radio-button :label="true">完成时间</el-radio-button> 
         </el-radio-group>
       </el-col>
       <el-col :span="8">
         <el-date-picker v-if="mode==TableContentType.Repository"
         v-model="date_range"
+        value-format="x"
         type="daterange"
         unlink-panels
         range-separator="To"
@@ -84,7 +85,7 @@
     </template>
 
     <template #default="scope">
-        <el-button size="small" @click="formDataEdit(scope.row)" type="primary" :disabled="viewback ||(mode==TableContentType.HistoryItem)">编辑</el-button >
+        <el-button size="small" @click="formDataEdit(scope.row)" type="primary" :disabled="viewback ||(mode==TableContentType.HistoryItem || (mode==TableContentType.Repository))">编辑</el-button >
         <el-popconfirm title="确认删除？" @confirm="formDataDel(scope.row.uuid)">
           <template #reference>
             <el-button size="small" type="danger" :disabled="viewback || !(mode==TableContentType.NewItem)">删除</el-button >
@@ -148,7 +149,6 @@ async function NormalUpdateTable(){
   let data:ItemData[] = await GetItems(start, end, false, true);
   let user_info = UserInfo()
 
-  console.dir(user_info)
   //根据属性进行过滤
   if(user_info.user_lv == USER_TYPE.normalize)
   {
@@ -159,7 +159,6 @@ async function NormalUpdateTable(){
     }))
   }
 
-  console.dir(data)
   //检查当前的模式
   switch(route.params.tableMode)
   {
@@ -203,11 +202,36 @@ let checkWithCreateTimeStamp:Ref<boolean> = ref(false)
 
 /// 回溯模式更新表单方法
 async function RepositoryUpdateTable(){
-  tableData.value = _.cloneDeep(await GetItems(date_range.value[0],
-                                               date_range.value[1],
-                                               true,
-                                               !checkWithCreateTimeStamp.value));
+  let data:ItemData[] =  await GetItems(date_range.value[0],
+                                        date_range.value[1],
+                                        true,
+                                        !checkWithCreateTimeStamp.value);
+  let user_info = UserInfo()
+
+  //根据属性进行名称过滤
+  if(user_info.user_lv == USER_TYPE.normalize)
+  {
+    tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
+      if(iter.person.indexOf(user_info.user_name) == -1)
+        return false; 
+      return true;
+    }))
+  }
+  else
+  {
+    tableData.value = _.cloneDeep(data)
+  }
+
 }
+
+watch(date_range, (value) => {
+  UpdateTableContent();
+})
+
+watch(checkWithCreateTimeStamp, (value) => {
+  //变更集合
+  UpdateTableContent();
+})
 
 //快捷日期
 const shortcuts = [

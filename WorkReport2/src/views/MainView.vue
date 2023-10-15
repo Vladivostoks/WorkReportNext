@@ -1,23 +1,28 @@
 <!-- 项目记录主界面 -->
 <template>
-    <el-container>
-        <el-aside width="17em">
+    <el-container style="width: 100%;">
+        <el-aside >
             <router-link to="/">
-                <el-image style="height: 3rem; margin: 1em 1em;" src="/logo.png" fit="contain" />
+                <el-image style="height: 3.8em; margin: 1em 1em;" src="/logo.png" fit="contain" />
             </router-link>
+            <el-checkbox-group v-model="item_area" size="small">
+                <el-checkbox-button v-for="city in item_areas" :key="city" :label="city">
+                    {{ city }}
+                </el-checkbox-button>
+            </el-checkbox-group>
             <el-divider/>
             <UserBoard/>     
         </el-aside>
         <el-container>
-        <el-main>
-            <!-- <InfoTable/> -->
-            <router-view v-slot="{ Component }">
-                <component :is="Component" />
-            </router-view>
-        </el-main>
-        <el-footer>
-            <h5>Report System v1.0.0 Copyright ©2021 Ayden.Shu. All Rights Reserved.</h5>
-        </el-footer>
+            <el-main>
+                <!-- <InfoTable/> -->
+                <router-view v-slot="{ Component }">
+                    <component :is="Component" />
+                </router-view>
+            </el-main>
+            <el-footer>
+                <h5>Report System v2.0.0 Copyright ©2021 Ayden.Shu. All Rights Reserved.</h5>
+            </el-footer>
         </el-container>
     </el-container>
 </template>
@@ -62,25 +67,31 @@ onMounted(()=>{
     },1000);
 })
 
+//TODO:
+const item_area:Ref<string[]> = ref([]);
+const item_areas:string[] = [ "杭州" , "成都" ]
+
 </script>
 
 <style lang="stylus" scoped>
 @media (hover: hover)
     a:hover 
         background-color: var(--color-background)
-
-.el-container
-    width: 100%
+.el-aside 
+    width: 13em
 
 .el-main
     padding: 0 0
-    height: 98vh
+    height: 95vh
 
 .el-footer
     display: flex
     justify-content: center
-    height: 2vh
+    height: fit-content
 
 .el-divider
     margin: 0 0
+.el-checkbox-group
+    display: flex
+    justify-content: center
 </style>

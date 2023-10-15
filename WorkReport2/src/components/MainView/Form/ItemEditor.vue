@@ -138,7 +138,9 @@
       </el-select>
     </el-form-item>
     <el-form-item label="预计完成时间" prop="period">
-      <el-date-picker v-model="form.period" value-format="x" type="date" :disabled="prop.data?true:false"/>
+      <el-date-picker v-model="form.period" value-format="x" type="date" 
+        :disabled="!ChangeTimeAvaliable()"
+      />
     </el-form-item>
     <el-form-item label="项目路径" prop="url">
       <el-input v-model="form.url" placeholder="svn://xxx.xx.xx.x/xxxxxx"/>
@@ -164,6 +166,7 @@ import {v4 as uuidv4} from 'uuid';
 import type { FormRules } from 'element-plus/es/tokens/form';
 import type { FormInstance } from 'element-plus/es/components/form';
 import { ItemStatus } from '@/assets/js/timeline';
+import { GetWeekIndex } from '@/assets/js/common'
 
 export interface ItemFormData{
   data?: ItemData
@@ -298,6 +301,19 @@ function ValueCheck(formEl: FormInstance | undefined){
   )
 }
 
+function ChangeTimeAvaliable()
+{
+  if(prop.data?.date)
+  {
+    if(GetWeekIndex(prop.data.date)[0] == GetWeekIndex(new Date().getTime())[0]
+    && GetWeekIndex(prop.data.date)[1] == GetWeekIndex(new Date().getTime())[1])
+    {
+      return true;
+    }
+  }
+
+  return true;
+}
 </script>
 
 <style lang="stylus" scoped>

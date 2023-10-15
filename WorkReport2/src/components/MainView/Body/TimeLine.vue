@@ -83,6 +83,8 @@
         <div>
           <span>{{ useDateFormat(item.timestamp, 'YYYY-MM-DD HH:mm:ss (ddd)', { locales: 'zh-CN' }).value}}</span>
           <el-tag class="ml-2" :type="NameStatusMap[item.status]">{{item.author}}</el-tag>
+          <!-- 由管理员进行备忘录创建 -->
+          <!-- <el-button type="primary" size="small" :icon="List" @click="remind_edit=!remind_edit; remind_edit?activeNames=['1']:activeNames=[]"/> -->
           <!-- 本周内的可以进行修改删除 -->
           <span v-if="prop?.editable && user_info.user_name==item.author && ((new Date().getTime()-item.timestamp)/1000/60/60/24)<7">
             <el-popconfirm title="确认删除？" @confirm="DelRecent(item.timestamp, index)">
@@ -112,6 +114,7 @@
             <div class="text_title">【结果/计划】：</div>
             <div class="text">{{ item.result }}</div>
         </el-card>
+        <!-- <Memo :uuid="prop.uuid" :timestamp="item.timestamp"></Memo> -->
       </template>
     </el-step>
   </el-steps>
@@ -124,6 +127,7 @@ import { Edit,
          ChatLineRound, 
          ChatRound, 
          Delete, 
+         List,
          Check, 
          VideoPause,
          Close,
@@ -139,6 +143,7 @@ import type { TimelineInfo, } from '@/assets/js/timeline'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 import CheckLottie from '@/assets/img/1798-check-animation.json'
+import Memo from "@/components/MainView/Body/Memo.vue"
  
 export type TimelineStatus = "normal"|"wait"|"process"|"finish"|"error"|"success";
 export type NameStatus = "success"|"info"|"warning"|"danger"|""

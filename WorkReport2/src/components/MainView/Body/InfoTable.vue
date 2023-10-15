@@ -24,13 +24,14 @@
         end-placeholder="End date"/>
       </el-col>
       <el-col :span="8">
+        <!-- <el-button type="warning" @click="OpenReview">备忘回溯</el-button> -->
         <el-button type="info" @click="formDataExport(true)">本周导出</el-button>
         <el-button type="success" @click="formDataExport(false)">导出显示</el-button>
         <el-button type="primary" @click="formDataAdd">新增项目</el-button>
       </el-col>
   </el-header>
   <el-container>
-  <el-table :data="tableData" ref="tableRef" max-height="87vh" min-height="87vh" width="100%" :row-style="RowStyleCalc" row-key="uuid" sortable>
+  <el-table :data="tableData" ref="tableRef" max-height="96vh - 8em" width="100%" :row-style="RowStyleCalc" row-key="uuid" sortable>
     <el-table-column type="expand">
       <template #default="props">
         <InfoExpand :data="props.row" 
@@ -99,6 +100,7 @@
   <Export :export_start = "export_start"
           :export_end= "export_end"
   :enable="isexport" :quick="isquick" :data="tableData" @DoOutputOpt="isexport=false"/>
+  <!-- <Review :enable="isreview" @close="isreview=false"/> -->
   </el-container>
 </template>
 
@@ -114,6 +116,7 @@ import { DelItems, GetItems, PutItems, type ItemData } from "@/assets/js/itemtab
 import { GetWeekIndex, GetWeekInterval } from '@/assets/js/common';
 import type { BaseItemData, ExpandItemData } from '@/assets/js/itemtable';
 import ItemEditor, { type ItemFormData } from '@/components/MainView/Form/ItemEditor.vue';
+import Review from '@/components/MainView/Form/Review.vue';
 import Export from '@/components/MainView/Form/Export.vue';
 import _ from 'lodash'
 import { ElMessage, type FormInstance } from 'element-plus'
@@ -595,12 +598,21 @@ function formDataExport(quick:boolean)
   isexport.value = true;
 }
 
+/************************* 备忘回溯相关 **********************************/
+let isreview:Ref<boolean> = ref(false)
+/**
+ * 新增项目
+ */
+function OpenReview()
+{
+  isreview.value = true;
+}
+
 </script>
 
 <style lang="stylus" scoped>
 .el-table
   width: 100%
-
   :deep() .el-table__row
     // 绿
     --status-success-pass-color: #BDE1AC
@@ -643,8 +655,11 @@ function formDataExport(quick:boolean)
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 10vh;
+  height: 8em;
   background-color: #5470c6;
+
+.el-container
+  // height: 100% - 8em
 
 .el-col
   display: flex;

@@ -66,6 +66,4 @@ const expand_menu:Array<string> = reactive(['0','1','2','3'])
 
 
 <style lang="stylus" scoped>
-.el-menu
-    height: 90%
 </style>

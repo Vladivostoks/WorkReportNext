@@ -157,7 +157,7 @@ const export_opts = useStorage<Map<string,ExportOpt>>('export-opt',new Map([[ '�
     persons:[],
 
     format:"{timestamp}({name}):\r\n[实施]:{content}\r\n[结果]:{result}",
-    daterange:[(new Date().getTime() - 3600 * 1000 * 24 * 7), new Date().getTime()],
+    daterange: RefreshExportRange(),
   }
 ]]),undefined, {deep:true})
 //当前生效配置
@@ -183,6 +183,8 @@ watch(optionType, (newOptionType)=>{
   if(export_opts.value.get(newOptionType))
   {
     form.value = export_opts.value.get(newOptionType) as ExportOpt;
+    //修改时间区间
+    form.value.daterange = RefreshExportRange();
   }
 })
 
@@ -192,6 +194,19 @@ watch(form, (newForm)=>{
     export_opts.value = export_opts.value.set(optionType.value, newForm);
   }
 }, { deep: true })
+
+/// 刷新时间区间定位到周日
+function RefreshExportRange()
+{
+  const currentDate = new Date();
+  const currentDayOfWeek = currentDate.getDay(); // 0表示星期日，1表示星期一，以此类推
+  const daysUntilPreviousSunday = currentDayOfWeek === 0 ? 7 : currentDayOfWeek;
+  const daysUntilNextSunday = 7 - currentDayOfWeek;
+  const previousSundayTimestamp = currentDate.getTime() - daysUntilPreviousSunday * 24 * 60 * 60 * 1000;
+  const nextSundayTimestamp = currentDate.getTime() + daysUntilNextSunday * 24 * 60 * 60 * 1000;
+
+  return [previousSundayTimestamp, nextSundayTimestamp];
+}
 
 /// 删除本地配置
 function DelOutputOpt()

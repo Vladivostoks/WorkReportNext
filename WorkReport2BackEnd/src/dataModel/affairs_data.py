@@ -56,11 +56,14 @@ class AffairContent(DataModel):
                     """
     # 找到最后递增id
     __FIND_LAST_INSERT_ROWID = "SELECT LAST_INSERT_ROWID() FROM '%(affair_id)s'"
-                       
+    # 找到最后一行时间
+    __FIND_LAST_ROW_TIME = "SELECT timestamp FROM '%(affair_id)s' ORDER BY index_num DESC LIMIT 1"
+
     #替换数据
-    # __REPLACE_CONTENT = """REPLACE INTO '%(affair_id)s'(index_num,timestamp,progress_content,progress_result,project_status,percent,author)
-    #                        VALUES('%(index)d','%(timestamp)d','%(progress_content)s','%(progress_result)s','%(project_status)s','%(percent)d','%(author)s');
-    #                     """
+    __REPLACE_CONTENT = """UPDATE '%(affair_id)s'
+                           SET progress='%(progress_content)s',result='%(progress_result)s',status='%(project_status)s',timeused='%(timeused)f',percent='%(percent)d',author='%(author)s'
+                           WHERE timestamp='%(timestamp)d';
+                        """
     # 删除数据
     __DELETE_CONTENT = 'DELETE FROM "%(affair_id)s" WHERE timestamp=%(timestamp)d;'
 
@@ -132,35 +135,38 @@ class AffairContent(DataModel):
 
     #修改一条记录
     def replace_record(self,
-                       index,
                        timestamp,
-                       progress_content,
-                       progress_result,
-                       project_status,
-                       percent,
-                       author):
-        # try:
-        #     cursor = self.__db.cursor()
+                       progress,
+                       result,
+                       status,
+                       timeused,
+                       author,
+                       **args):
+        try:
+            cursor = self.__db.cursor()
+            if self.__affair_id != "":
+                cursor.execute(self.__REPLACE_CONTENT % {"affair_id":self.__affair_id,
+                                                         "progress_content":progress,
+                                                         "progress_result":result,
+                                                         "project_status":status,
+                                                         "timeused":timeused,
+                                                         "percent":0,
+                                                         "author":author,
+                                                         "timestamp":timestamp})
+                cursor.execute(self.__FIND_LAST_ROW_TIME % {"affair_id":self.__affair_id})
+                ret = cursor.fetchone()
+            cursor.close()
+            self.__db.commit()
+            # 如果是最后一条修改，那么更新list中的项目状态
+            if ret['timestamp'] == timestamp:
+                ret = AffairList().update_record(self.__affair_id, status, timestamp)
+        except sqlite3.Error as e:
+            logging.error(e)
+            return False
 
-        #     if self.__affair_id != "":
-        #         cursor.execute(self.__REPLACE_CONTENT % {"affair_id":self.__affair_id,
-        #                                                  "index":index,
-        #                                                  "timestamp":timestamp,
-        #                                                  "progress_content":progress_content,
-        #                                                  "progress_result":progress_result,
-        #                                                  "project_status":project_status,
-        #                                                  "percent":percent,
-        #                                                  "author":author})
-        #     cursor.close()
-        #     self.__db.commit()
+        return ret
 
-        # except sqlite3.Error as e:
-        #     pprint.pprint(e)
-        #     return False
-
-        return True
-
-    #增加/修改一条记录
+    #增加一条记录
     def add_record(self,
                    timestamp,
                    progress,

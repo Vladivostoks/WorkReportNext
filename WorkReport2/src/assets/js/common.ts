@@ -44,3 +44,21 @@ export function GetWeekInterval(start_timestamp:number, end_timestamp:number):nu
 {
     return Math.ceil((end_timestamp-start_timestamp)/1000/60/60/24/7);
 }
+
+
+/**
+ * 计算是否在本周内
+ * @param start_timestamp 开始时间
+ * @param end_timestamp 结束时间
+ * @returns 
+ */
+export function InCurrentWeek(timestamp:number)
+{
+    if(GetWeekIndex(timestamp)[0] == GetWeekIndex(new Date().getTime())[0]
+    && GetWeekIndex(timestamp)[1] == GetWeekIndex(new Date().getTime())[1])
+    {
+        return true;
+    }
+
+    return false;
+}

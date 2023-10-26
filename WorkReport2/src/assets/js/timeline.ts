@@ -83,6 +83,34 @@ export async function RpcPushTimeline(uuid:string, data:TimelineInfo):Promise<bo
 }
 
 /**
+ * 往时间线中编辑节点
+ * @param uuid 
+ */
+export async function RpcPutTimeline(uuid:string, data:TimelineInfo):Promise<boolean>
+{
+    let ret:boolean = false;
+
+    await axios({
+        url:'/affair/'+uuid,
+        method: 'put',
+        timeout: 5000,
+        responseType: 'json',
+        responseEncoding: 'utf8', 
+        headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+        },
+        data:data
+    }).then((res) => {
+        ret = res.data.ret;
+    }).catch((res)=>{
+        console.dir(res);
+        throw new AxiosError(res);        
+    });
+
+    return ret;
+}
+
+/**
  * 时间线删除
  * @param uuid 项目id
  * @param index 删除此项目id的第x个时间线

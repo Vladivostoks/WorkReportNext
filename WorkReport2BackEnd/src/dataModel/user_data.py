@@ -244,6 +244,11 @@ class UserData(DataModel):
         except sqlite3.Error as e:
             logging.error(e)
 
+        # 修饰
+        for res in result:
+            if isinstance(res["user_group"], list):
+                res["user_group"] = res["user_group"].split(",")
+
         return result[0] if len(result)>0 else False
 
 #用户管理模块单元测试

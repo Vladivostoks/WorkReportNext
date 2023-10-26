@@ -102,14 +102,13 @@
         />
       </el-select>
     </el-form-item>
-    <el-form-item label="项目区域/阶段" prop="area">
+    <el-form-item label="负责区域/组" prop="area">
       <el-select
         v-model="form.area"
         filterable
-        allow-create
         default-first-option
         :reserve-keyword="false"
-        placeholder="请选择项目区域或者阶段"
+        placeholder="请选择项目负责区域/组"
       >
         <el-option
           v-for="item in area_options"
@@ -197,7 +196,7 @@ const form:ItemData = prop.data?reactive(_.cloneDeep(prop.data)):reactive({
     //项目关联人员
     link_person: [],
     //项目区域/阶段
-    area: "未知",
+    area: UserInfo().user_group,
     //项目子类型
     subtype: [],
     //项目预计周期
@@ -270,7 +269,11 @@ const rules = reactive<FormRules>({
     message: '需要输入项目负责人',
     trigger: 'change',
   }],
-
+  area: [{
+    required: true,
+    message: '需要输入项目负责组/区域',
+    trigger: 'change',
+  }],
   period:[{
     required: true,
     validator: CheckPeriod,

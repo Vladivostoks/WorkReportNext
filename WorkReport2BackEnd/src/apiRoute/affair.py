@@ -92,6 +92,45 @@ class AffairsContent(Resource):
         else:
             return {"ret":True, "message":"时间线插入成功"}, 200
 
+    def put(self, affair_id):
+        put_parser = reqparse.RequestParser()
+
+        # 插入具体事件时间线
+        put_parser.add_argument('index', dest='index',
+                                type=int, location='json',
+                                required=False)
+        put_parser.add_argument('timestamp', dest='timestamp',
+                                type=int, location='json',
+                                required=True, help='Need input date or type error.')
+        put_parser.add_argument('progress', dest='progress',
+                                type=str, location='json',
+                                required=True, help='Need input progress or type error.')
+        put_parser.add_argument('result', dest='result',
+                                type=str, location='json',
+                                required=True, help='Need input result or type error.')
+        put_parser.add_argument('status', dest='status',
+                                type=str, location='json',
+                                required=True, help='Need input status or type error.')
+        put_parser.add_argument('timeused', dest='timeused',
+                                type=float, location='json',
+                                required=True, help='Need input timeused or type error.')
+        put_parser.add_argument('author', dest='author',
+                                type=str, location='json',
+                                required=True, help='Need input author or type error.')
+        req = put_parser.parse_args()
+
+        AFFAIR_CONTENT_DATA_DB_LOCK.acquire()
+        # if req["index"]:
+        #     ret = affairs_data.AffairContent(affair_id).replace_record(**req)
+        # else:
+        req.pop("index")
+        ret = affairs_data.AffairContent(affair_id).replace_record(**req)
+        AFFAIR_CONTENT_DATA_DB_LOCK.release()
+
+        if not ret:
+            return {"ret":False, "message":"时间线修改失败"}, 200
+        else:
+            return {"ret":True, "message":"时间线修改成功"}, 200
 
 class Affairs(Resource):
     # 根据时间范围,获取当前事务列表

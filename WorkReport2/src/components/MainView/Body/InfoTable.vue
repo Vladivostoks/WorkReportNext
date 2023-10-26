@@ -106,7 +106,7 @@
 
 <script lang="ts" setup>
 import { utils } from 'xlsx'
-import { useNow, useDateFormat } from '@vueuse/core'
+import { useNow, useDateFormat, useStorage } from '@vueuse/core'
 import InfoExpand from "@/components/MainView/Body/InfoExpand.vue"
 import type { DetailInfo } from "@/components/MainView/Body/InfoExpand.vue"
 import { computed, nextTick, onMounted, provide, reactive, ref, watch,  } from "vue";
@@ -125,6 +125,7 @@ import { useRoute } from 'vue-router';
 import { TableContentType } from '@/assets/js/types';
 import { UserInfo } from '@/stores/counter';
 import { USER_TYPE } from '@/assets/js/login';
+import { GetOption, OPTION_TYPE } from '@/assets/js/itemform';
 
 /************************* 基础模式相关变量 **********************************/
 /// 回溯模式
@@ -144,23 +145,61 @@ const export_end = computed(()=>{
   return start+ 3600 * 1000 * 24 * 7;
 })
 
+const member_group = useStorage<string[]>('group-info', []);
+
+watch(member_group, ()=>{
+  //更新表格
+  UpdateTableContent()
+})
+
 /// 普通模式下更新表格内容
+async function CommonFilter(data:ItemData[]):Promise<ItemData[]>
+{
+  let user_info = UserInfo()
+  let ret_data:ItemData[] = []
+
+  const area_options = await GetOption(OPTION_TYPE.area);
+  ret_data = _.cloneDeep(data.filter((iter:ItemData)=>{
+    let ret:boolean = true
+
+    //根据属性进行名称过滤
+    if(user_info.user_lv == USER_TYPE.normalize)
+    {
+      if(iter.person.indexOf(user_info.user_name) == -1)
+      {
+        ret = false; 
+      }
+    }
+
+    //根据组别进行选择过滤
+    if(ret)
+    {
+      //兼容历史项目显示,如果历史项目区域选项不在范围内，且选择了杭州，那么显示
+      if(member_group.value.indexOf(iter.area as string) >= 0
+      || (area_options.indexOf(iter.area??"") < 0
+      && member_group.value.indexOf("杭州") >= 0))
+      {
+        ret = true;
+      }
+      else
+      {
+        ret = false;
+      }
+    }
+
+    return ret;
+  }))
+
+  return ret_data
+}
+
 async function NormalUpdateTable(){
   const date:Date = new Date(baseTime.value)
   const start:number = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay()).getTime();
   const end:number = start+ 3600 * 1000 * 24 * 7;
   let data:ItemData[] = await GetItems(start, end, false, true);
-  let user_info = UserInfo()
 
-  //根据属性进行过滤
-  if(user_info.user_lv == USER_TYPE.normalize)
-  {
-    data = _.cloneDeep(data.filter((iter:ItemData)=>{
-      if(iter.person.indexOf(user_info.user_name) == -1)
-        return false; 
-      return true;
-    }))
-  }
+  data = await CommonFilter(data);
 
   //检查当前的模式
   switch(route.params.tableMode)
@@ -205,26 +244,11 @@ let checkWithCreateTimeStamp:Ref<boolean> = ref(false)
 
 /// 回溯模式更新表单方法
 async function RepositoryUpdateTable(){
-  let data:ItemData[] =  await GetItems(date_range.value[0],
-                                        date_range.value[1],
-                                        true,
-                                        !checkWithCreateTimeStamp.value);
-  let user_info = UserInfo()
-
-  //根据属性进行名称过滤
-  if(user_info.user_lv == USER_TYPE.normalize)
-  {
-    tableData.value = _.cloneDeep(data.filter((iter:ItemData)=>{
-      if(iter.person.indexOf(user_info.user_name) == -1)
-        return false; 
-      return true;
-    }))
-  }
-  else
-  {
-    tableData.value = _.cloneDeep(data)
-  }
-
+  const data:ItemData[] =  await GetItems(date_range.value[0],
+                                          date_range.value[1],
+                                          true,
+                                          !checkWithCreateTimeStamp.value);
+  tableData.value  = await CommonFilter(data);
 }
 
 watch(date_range, (value) => {

@@ -43,7 +43,7 @@ class User(Resource):
             
             if difflib.SequenceMatcher(None, 
                                        p.get_pinyin(iter, ''),
-                                       p.get_pinyin(req['username'], '')).ratio()<0.4:
+                                       p.get_pinyin(req['username'], '')).ratio()<0.8:
                 # print(difflib.SequenceMatcher(None, p.get_pinyin(iter, ''), p.get_pinyin(req['username'], '')).ratio())
                 # 删除
                 ret.remove(iter)
@@ -75,6 +75,7 @@ class User(Resource):
                 "user_ip": ret["user_ip"],
                 "user_lv": ret["user_prop"],
                 "user_token": ret["user_token"],
+                "user_group": ret["user_group"],
             }, 200) if ret else ({
                 "ret": False,
                 "message": "当前访问设备未查询到有用户绑定"

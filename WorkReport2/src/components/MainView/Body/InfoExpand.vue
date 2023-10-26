@@ -1,7 +1,7 @@
 <template>
 <el-card>
   <el-descriptions border :column="3">
-    <el-descriptions-item label="区域/阶段">
+    <el-descriptions-item label="负责区域/组">
       {{ prop.data.area }}
     </el-descriptions-item>
     <el-descriptions-item label="项目子类型">

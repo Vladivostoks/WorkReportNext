@@ -63,7 +63,7 @@
             v-model="form.format"
             :autosize="{ minRows: 3, maxRows: 10 }"
             type="textarea"
-            placeholder="可选变量:处理人员-{name} 关联人员-{link_name} 时间戳-{timestamp} 执行内容-{content} 执行结果-{result}"/>
+            placeholder="可选变量:处理人员-${name} 项目状态-${status} 时间戳-${timestamp} 执行内容-${content} 执行结果-${result}"/>
         </el-form-item>
 
         <el-form-item label="导出时间区间" prop="describe">
@@ -156,7 +156,7 @@ const export_opts = useStorage<Map<string,ExportOpt>>('export-opt',new Map([[ '�
     types:[],
     persons:[],
 
-    format:"{timestamp}({name}):\r\n[实施]:{content}\r\n[结果]:{result}",
+    format:"${timestamp}(${name}):\r\n[实施]:${content}\r\n[结果]:${result}",
     daterange: RefreshExportRange(),
   }
 ]]),undefined, {deep:true})
@@ -228,6 +228,7 @@ function DelOutputOpt()
 type outputList = {
   opt: keyof ItemData,
   name: string,
+  width: number,
   header_func?: ()=>string,
   content_func?: (value:ItemData)=>string | Promise<string>,
 };
@@ -235,50 +236,66 @@ type outputList = {
 const OutputMap:outputList[] = [{
     opt: "uuid",
     name:"具体内容",
+    width: 60,
     header_func: ():string=> {
       const date = new Date(form.value.daterange[0]); 
       return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`
     },
     content_func: async (value:ItemData):Promise<string>=> {
-      console.dir(form.value.daterange)
+      // console.dir(form.value.daterange)
       let res:TimelineInfo[] = await RpcGetTimeline(value.uuid,form.value.daterange[0],form.value.daterange[1])
       let content:string=""; 
+      
+      if(res.length <= 0)
+      {
+        content = value.describe
+      }
+      else 
+      {
+        res.forEach(value=>{
+          let temp_content:string = form.value.format;
+          let re = /\$\{timestamp\}/gi;
+          temp_content = temp_content.replace(re, new Date(value.timestamp).toISOString()); 
+          re = /\$\{name\}/gi;
+          temp_content = temp_content.replace(re, value.author); 
+          re = /\$\{content\}/gi;
+          temp_content = temp_content.replace(re, value.progress); 
+          re = /\$\{result\}/gi;
+          temp_content = temp_content.replace(re, value.result); 
+          re = /\$\{status\}/gi;
+          temp_content = temp_content.replace(re, value.status); 
 
-      res.forEach(value=>{
-        let temp_content:string = form.value.format;
-        let re = /\$\{timestamp\}/gi;
-        temp_content = temp_content.replace(re, new Date(value.timestamp).toISOString()); 
-        re = /\$\{name\}/gi;
-        temp_content = temp_content.replace(re, value.author); 
-        re = /\$\{content\}/gi;
-        temp_content = temp_content.replace(re, value.progress); 
-        re = /\$\{result\}/gi;
-        temp_content = temp_content.replace(re, value.result); 
-
-        content += temp_content+"\r\n\r\n";
-      })
+          content += temp_content+"\r\n\r\n";
+        })
+      }
       
       return content;
     }
   },{
     opt: "date",
     name:"创建时间",
+    width: 20,
     content_func: (value:ItemData):string=> { const date = new Date(value.date); return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`}
   },{
     opt: "device",
     name:"设备型号",
+    width: 20,
   },{
     opt: "name",
     name:"项目名称",
+    width: 30,
   },{
     opt: "type",
     name:"项目类型",
+    width: 20,
   },{
     opt: "describe",
     name:"项目描述",
+    width: 50,
   },{
     opt: "person",
     name: "负责人",
+    width: 20,
     content_func: (value:ItemData):string=> { 
       let ret:string="";
       value.person.forEach((value)=>
@@ -291,6 +308,7 @@ const OutputMap:outputList[] = [{
   },{
     opt: "link_person",
     name: "关联人员",
+    width: 20,
     content_func: (value:ItemData):string=> { 
       let ret:string="";
       value.link_person?.forEach((value)=>
@@ -303,9 +321,11 @@ const OutputMap:outputList[] = [{
   },{
     opt: "area",
     name: "区域/阶段",
+    width: 20,
   },{
     opt: "subtype",
     name: "子类型",
+    width: 20,
     content_func: (value:ItemData):string=> { 
       let ret:string="";
       value.person.forEach((value)=>
@@ -318,6 +338,7 @@ const OutputMap:outputList[] = [{
   },{
     opt: "period",
     name: "预计周期",
+    width: 20,
     content_func: (value:ItemData):string=> { 
       const interval = GetWeekInterval(value.date, value.period)
       const pass_interval = GetWeekInterval(value.date,new Date().getTime())
@@ -327,6 +348,7 @@ const OutputMap:outputList[] = [{
   },{
     opt: "period",
     name: "进度(%)",
+    width: 20,
     content_func: (value:ItemData):string=> { 
       const interval = GetWeekInterval(value.date, value.period)
       let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
@@ -338,9 +360,11 @@ const OutputMap:outputList[] = [{
   },{
     opt: "url",
     name: "项目路径",
+    width: 20,
   },{
     opt: "status",
     name: "项目状态(百分比)",
+    width: 20,
     content_func: (value:ItemData):string=> { 
       const interval = GetWeekInterval(value.date, value.period)
       let pass_per = Math.round(value.progressing/(interval<=0?1:interval)*100)
@@ -352,12 +376,19 @@ const OutputMap:outputList[] = [{
   },{
     opt: "status",
     name: "项目状态",
+    width: 20,
 }]
 
 /// 进行xls导出
 async function AutoXlsExport(){
   ///step1:根据配置筛选本周的列
   let xls_header:string[] = [];
+  let xls_width:{
+    wch: number
+  }[] = [];
+  let xls_height:{
+    hpx:number
+  }[] = [];
 
   form.value.excel_option.forEach((value: string)=>{
     for(const i in OutputMap)
@@ -378,25 +409,23 @@ async function AutoXlsExport(){
   })
 
   ///step2:获取信息并插入值
-  let data:ItemData[] = await GetItems(prop.export_start, prop.export_end, false, true);
+  const total_data:ItemData[] = await GetItems(prop.export_start, prop.export_end, false, true);
 
   ///step3:先根据总规则过滤类型和人员，根据三种规则分别筛选data,并插入到列表 
-  data = data.filter(item => {
-    let flag = false;
-    //人员过滤
-    item.person.forEach(value=>{
-      if(indexOf(form.value.persons, value) >= 0)
-      {
-        flag = true;
-      }
-    })
+  const data = total_data.filter(item => {
+    function isSubset(A: any[], B: any[]): boolean {
+      return A.every(item => B.includes(item));
+    }
 
-    //类型过滤
-    if(indexOf(form.value.types, item.type) >= 0
-    || flag)
+    if(isSubset(item.person, form.value.persons))
     {
       return false;
     }
+    else if(indexOf(form.value.types, item.type) >= 0)
+    {
+      return false;
+    }
+
     return true;
   })
 
@@ -426,15 +455,22 @@ async function AutoXlsExport(){
             {
               sheet_data.push(String(temp_data[i][OutputMap[k].opt]))
             }
+            xls_width.push({wch:OutputMap[k].width})
             break;
           }
         }
+
+        xls_height.push({hpx: 30})
       }
       sheet_all_data.push(sheet_data)
     }
+
     // 创建一个工作表对象
     const ws:WorkSheet = utils.aoa_to_sheet(sheet_all_data);
-
+    
+    ws['!cols'] = xls_width
+    ws['!rows'] = xls_height
+    console.dir(ws)
     Object.keys(ws).forEach((key)=>{
       if(key.indexOf('!')<0
       && key.indexOf(':')<0)
@@ -496,6 +532,7 @@ async function AutoXlsExport(){
     bookType: "xlsx",
     bookSST: true,
     type: "array",
+    cellStyles: true,
   });
 
   FileSaver.saveAs(

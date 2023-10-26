@@ -5,9 +5,9 @@
             <router-link to="/">
                 <el-image style="height: 3.8em; margin: 1em 1em;" src="/logo.png" fit="contain" />
             </router-link>
-            <el-checkbox-group v-model="item_area" size="small">
-                <el-checkbox-button v-for="city in item_areas" :key="city" :label="city">
-                    {{ city }}
+            <el-checkbox-group v-model="member_group" size="small">
+                <el-checkbox-button v-for="group in member_groups" :key="group" :label="group">
+                    {{ group }}
                 </el-checkbox-button>
             </el-checkbox-group>
             <el-divider/>
@@ -32,11 +32,16 @@ import UserBoard from '@/components/MainView/Aside/UserBoard.vue';
 import InfoTable from '@/components/MainView/Body/InfoTable.vue';
 import { onUpdated, onBeforeMount, ref, type Ref, onMounted, watch } from 'vue';
 import { useCookies } from '@vueuse/integrations/useCookies'
-import { UserInfo, USER_STATUS } from '@/stores/counter';
+import { UserInfo } from '@/stores/counter';
 import { useRoute, useRouter } from 'vue-router';
+import { useStorage } from '@vueuse/core';
 
 const cookies = useCookies(['user_name', 'user_ip', 'user_status', 'user_lv']);
 const router = useRouter()
+
+const member_groups:string[] = [ "杭州" , "成都" ]
+const member_group = useStorage<string[]>('group-info', member_groups)
+
 onBeforeMount(()=>{
     //检查cookie，设置store
     if(cookies.get('user_name')
@@ -50,6 +55,7 @@ onBeforeMount(()=>{
         user_info.user_ip   = cookies.get('user_ip')
         user_info.user_lv   = cookies.get('user_lv')
         user_info.user_status = cookies.get('user_status')   
+        user_info.user_group = cookies.get('user_group')
     }
 })
 
@@ -57,8 +63,7 @@ onMounted(()=>{
     // 设置cookie检查定时器
     self.setInterval(()=>{
         if(!cookies.get('user_name')
-        || !cookies.get('user_ip')
-        || !cookies.get('user_lv')
+        || !cookies.get('user_ip') || !cookies.get('user_lv')
         || !cookies.get('user_status'))
         {
             //回到注册页
@@ -67,9 +72,6 @@ onMounted(()=>{
     },1000);
 })
 
-//TODO:
-const item_area:Ref<string[]> = ref([]);
-const item_areas:string[] = [ "杭州" , "成都" ]
 
 </script>
 

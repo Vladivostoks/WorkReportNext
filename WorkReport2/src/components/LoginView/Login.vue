@@ -83,7 +83,7 @@ async function login(name:string){
             cookies.set('user_ip', user_info.user_ip);
             cookies.set('user_status', user_info.user_status);
             cookies.set('user_lv', user_info.user_lv);
-            // cookies.set('user_group', user_info.user_group);
+            cookies.set('user_group', user_info.user_group);
         }
         else
         {

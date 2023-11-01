@@ -160,15 +160,18 @@ async function CommonFilter(data:ItemData[]):Promise<ItemData[]>
 
   const area_options = await GetOption(OPTION_TYPE.area);
   ret_data = _.cloneDeep(data.filter((iter:ItemData)=>{
-    let ret:boolean = true
+    let ret:boolean = false
 
     //根据属性进行名称过滤
     if(user_info.user_lv == USER_TYPE.normalize)
     {
-      if(iter.person.indexOf(user_info.user_name) == -1)
-      {
-        ret = false; 
-      }
+      iter.person.forEach(element => {
+        if(element.replace(/\d/g, "") == user_info.user_name.replace(/\d/g, ""))
+        {
+          //如果名字中中文相同那么不进行过滤
+          ret = true;
+        }
+      });
     }
 
     //根据组别进行选择过滤

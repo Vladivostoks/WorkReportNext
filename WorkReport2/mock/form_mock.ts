@@ -16,13 +16,13 @@ let form_option_get_api = {
                 return ["产线问题", "组件开发", "版本开发"]
             }
             case "prjarea_opt":{
-                return ["杭州", "重庆", "Build 1", "Build 2"]
+                return ["杭州", "成都"]
             }
             case "relateperson_opt":{
                 return ["测试人员", "测试人员2"]
             }
             case "dutyperson_opt":{
-                return ["Ayden", "开发人员"]
+                return ["Ayden", "aaaa"]
             }
             default:{
                 return false

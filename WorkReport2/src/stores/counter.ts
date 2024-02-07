@@ -1,4 +1,4 @@
-import { ref, computed, reactive } from 'vue'
+import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import { defineStore } from 'pinia'
 import { USER_TYPE } from '@/assets/js/login'

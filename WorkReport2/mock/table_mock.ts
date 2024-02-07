@@ -27,7 +27,7 @@ let form_option_get_api:MockMethod = {
                 person: ["Ayden","aaaa"],
 
                 link_person:["测试人员"],
-                area: "杭州",
+                area: "成都",
                 subtype: ["问题反馈", "产线问题"],
                 period: new Date('2023-10-30').getTime(),
                 url: "svn://123.123.12.1/testcode",
@@ -37,7 +37,7 @@ let form_option_get_api:MockMethod = {
                 progressing: 5,
             })
         }
-        return ret;
+        // return ret;
         return [{
             uuid: 'abcdefg',
             date: new Date('2023-01-30').getTime(),

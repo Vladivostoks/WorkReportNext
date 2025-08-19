@@ -179,7 +179,15 @@
             <div class="text_title">【结果/计划】：</div>
             <div class="text">{{ item.result }}</div>
         </el-card>
-        <!-- <Memo :uuid="prop.uuid" :timestamp="item.timestamp"></Memo> -->
+        <div v-if="view_timeline_data[index].show_memo"> 
+            <Memo v-show="view_timeline_data[index].show_memo" :uuid="prop.uuid" :timestamp="item.timestamp"></Memo>
+        </div>
+        <transition v-else name="el-zoom-in-top"> 
+          <div @mouseover="view_timeline_data[index].show_memo = true" @mouseleave="view_timeline_data[index].show_memo = false">
+            <span>备忘录</span>
+            <Memo v-show="view_timeline_data[index].show_memo" :uuid="prop.uuid" :timestamp="item.timestamp"></Memo>
+          </div>
+        </transition>
       </template>
     </el-step>
   </el-steps>
@@ -254,6 +262,7 @@ let view_timeline_data:Ref<
 {
   info:TimelineInfo,
   editing: boolean,
+  show_memo: boolean,   ///< 是否展示备忘录
 }[]> = ref([])
 
 onMounted(()=>{
@@ -261,7 +270,8 @@ onMounted(()=>{
     res.forEach(item=>{
       view_timeline_data.value.push({
         info:_.cloneDeep(item),
-        editing:false
+        editing:false,
+        show_memo:false,        ///< 有记录的显示，没记录的移动到坐标上显示
       })
     })
     // view_timeline_data.value = _.cloneDeep(res);

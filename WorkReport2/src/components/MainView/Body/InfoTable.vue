@@ -24,7 +24,6 @@
         end-placeholder="End date"/>
       </el-col>
       <el-col :span="8">
-        <!-- <el-button type="warning" @click="OpenReview">备忘回溯</el-button> -->
         <el-button type="info" @click="formDataExport(true)">本周导出</el-button>
         <el-button type="success" @click="formDataExport(false)">导出显示</el-button>
         <el-button type="primary" @click="formDataAdd">新增项目</el-button>
@@ -682,7 +681,7 @@ function OpenReview()
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 8em;
+  height: 4em;
   background-color: #5470c6;
 
 .el-container

@@ -90,7 +90,7 @@ let form_option_get_api:MockMethod = {
             url: "svn://123.123.12.1/testcode",
 
             status: ItemStatus.successed,
-            changeNum: 3,
+            changeNum: 30,
             progressing: 5,
         }]
     }

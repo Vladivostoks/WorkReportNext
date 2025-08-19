@@ -1,7 +1,7 @@
 <!-- 项目记录主界面 -->
 <template>
     <el-container style="width: 100%;">
-        <el-aside >
+        <el-aside>
             <router-link to="/">
                 <el-image style="height: 3.8em; margin: 1em 1em;" src="/logo.png" fit="contain" />
             </router-link>
@@ -12,6 +12,11 @@
             </el-checkbox-group>
             <el-divider/>
             <UserBoard/>     
+            <div class="side-affix">
+                <el-affix position="bottom" :offset="20">
+                    <MemoList/>
+                </el-affix>
+            </div>
         </el-aside>
         <el-container>
             <el-main>
@@ -21,7 +26,7 @@
                 </router-view>
             </el-main>
             <el-footer>
-                <h5>Report System v2.0.0 Copyright ©2021 Ayden.Shu. All Rights Reserved.</h5>
+                <h5>Report System v2.1.0 Copyright ©2021 Ayden.Shu. All Rights Reserved.</h5>
             </el-footer>
         </el-container>
     </el-container>
@@ -29,6 +34,7 @@
 
 <script setup lang="ts">
 import UserBoard from '@/components/MainView/Aside/UserBoard.vue';
+import MemoList from '@/components/MainView/Aside/MemoList.vue';
 import InfoTable from '@/components/MainView/Body/InfoTable.vue';
 import { onUpdated, onBeforeMount, ref, type Ref, onMounted, watch } from 'vue';
 import { useCookies } from '@vueuse/integrations/useCookies'
@@ -81,6 +87,12 @@ onMounted(()=>{
         background-color: var(--color-background)
 .el-aside 
     width: 13em
+    position: relative
+
+.side-affix
+    position: absolute
+    bottom: 2vh
+    margin-left: 2em
 
 .el-main
     padding: 0 0

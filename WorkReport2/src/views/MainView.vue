@@ -1,7 +1,7 @@
 <!-- 项目记录主界面 -->
 <template>
     <el-container style="width: 100%;">
-        <el-aside>
+        <el-aside style="border-right: 1px solid #dcdfe6;">
             <router-link to="/">
                 <el-image style="height: 3.8em; margin: 1em 1em;" src="/logo.png" fit="contain" />
             </router-link>

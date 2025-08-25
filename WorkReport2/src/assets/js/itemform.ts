@@ -21,7 +21,7 @@ export async function GetOption(option:OPTION_TYPE):Promise<string[]>
     await axios({
         url:'/option',
         method: 'get',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {'option_name':option}

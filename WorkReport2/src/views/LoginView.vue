@@ -31,10 +31,14 @@
 </template>
 
 <script setup lang="ts">
-import loginLogo from '@/assets/img/132180-2023.json'
+// import loginLogo from '@/assets/img/132180-2023.json'
+import loginLogo from '@/assets/img/blooming-2025.json'
+
 import LoadingLottie from '@/assets/img/96215-loading-blue.json'
 // import background from '@/assets/img/92013-abstract-blue-and-yellow.json'
-import background from "@/assets/img/110106-am-impact-zorg-websites.json"
+// import background from "@/assets/img/110106-am-impact-zorg-websites.json"
+import background from "@/assets/img/chatting-Illustration.json"
+
 
 import {
     computed,
@@ -106,25 +110,34 @@ function route():void {
 <style lang="stylus" scoped>
 
 .wrapper
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 2px;
+    display: grid
+    grid-template-columns: 1fr 1fr
+    gap: 2px
+    grid-template-rows: auto
+    align-items: start
+    justify-items: stretch
+    height: 100%
 
 .gridleft
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
     grid-row: 1
     grid-column: 1
+
+    align-items: flex-start
+    height: 55vh
+
+    display: flex
+    flex-direction: row
+
 
 .gridright
     grid-row: 1
     grid-column: 2
+
+    align-items: flex-start
+    height: 55vh
+
     display: flex
     flex-direction: column
-    justify-content: center
-    align-items: center
 
     div
         width: -webkit-fill-available

@@ -51,7 +51,7 @@ export async function RpcGetMemo(uuid:string, timestamp:number):Promise<MemoInfo
     await axios({
         url:'/memo',
         method: 'get',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {
@@ -76,7 +76,7 @@ export async function RpcGetAllMemo(cycle_closed:boolean, memo_type:MemoTypes):P
     await axios({
         url:'/memo',
         method: 'get',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {
@@ -104,7 +104,7 @@ export async function RpcPushMemo(uuid:string, timestamp:number, data:MemoInfo):
     await axios({
         url:'/memo',
         method: 'post',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {
@@ -138,7 +138,7 @@ export async function RpcDeleteMemo(uuid:string, timestamp:number):Promise<boole
     await axios({
         url:'/memo',
         method: 'delete',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {

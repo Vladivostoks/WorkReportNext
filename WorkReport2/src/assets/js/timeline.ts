@@ -37,7 +37,7 @@ export async function RpcGetTimeline(uuid:string, start_time:number, end_time:nu
     await axios({
         url:'/affair/'+uuid,
         method: 'get',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {
@@ -65,7 +65,7 @@ export async function RpcPushTimeline(uuid:string, data:TimelineInfo):Promise<bo
     await axios({
         url:'/affair/'+uuid,
         method: 'post',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {
@@ -93,7 +93,7 @@ export async function RpcPutTimeline(uuid:string, data:TimelineInfo):Promise<boo
     await axios({
         url:'/affair/'+uuid,
         method: 'put',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {
@@ -123,7 +123,7 @@ export async function RpcDeleteTimeline(uuid:string, timestamp:number):Promise<b
     await axios({
         url:'/affair/'+uuid,
         method: 'delete',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {

@@ -57,7 +57,7 @@ export async function GetItems(start_time:number,
     await axios({
         url:'/affair',
         method: 'get',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {
@@ -98,7 +98,7 @@ export async function DelItems(uuid:string):Promise<boolean>
     await axios({
         url:'/affair',
         method: 'delete',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {
@@ -125,7 +125,7 @@ export async function PutItems(item:ItemData):Promise<boolean>
         await axios({
             url:'/affair',
             method: 'put',
-            timeout: 5000,
+            timeout: 15000,
             responseType: 'json',
             responseEncoding: 'utf8', 
             headers: {

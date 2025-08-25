@@ -188,7 +188,7 @@ async function userAdd(name:string,passwd:string,usertype:USER_TYPE,usergroup:st
     await axios({
         url:'/user',
         method: 'put',
-        timeout: 5000,
+        timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
         headers: {

@@ -7,7 +7,6 @@
         <el-button type="primary" @click="edit=!edit;view_timeline_data.forEach(item=>item.editing=false)">新增时间线</el-button>
       </template>
     </el-step>
-
     <el-step v-else-if="edit && prop?.editable" :status="TimelineStatusMap[new_timeline.status]" :icon="Edit" style="margin-left: 1em;">
       <template #title>
         {{ useDateFormat(new Date(), 'YYYY-MM-DD HH:mm:ss (ddd)', { locales: 'zh-CN' }).value }}
@@ -179,13 +178,10 @@
             <div class="text_title">【结果/计划】：</div>
             <div class="text">{{ item.result }}</div>
         </el-card>
-        <div v-if="view_timeline_data[index].show_memo"> 
-            <Memo v-show="view_timeline_data[index].show_memo" :uuid="prop.uuid" :timestamp="item.timestamp"></Memo>
-        </div>
-        <transition v-else name="el-zoom-in-top"> 
-          <div @mouseover="view_timeline_data[index].show_memo = true" @mouseleave="view_timeline_data[index].show_memo = false">
+        <transition name="el-zoom-in-top"> 
+          <div @mouseover="show_memo = true"> <!-- @mouseover="view_timeline_data[index].show_memo = false" -->
             <span>备忘录</span>
-            <Memo v-show="view_timeline_data[index].show_memo" :uuid="prop.uuid" :timestamp="item.timestamp"></Memo>
+            <Memo v-show="show_memo" :uuid="prop.uuid" :timestamp="item.timestamp" :status="item.status"></Memo>
           </div>
         </transition>
       </template>
@@ -219,7 +215,7 @@ import CheckLottie from '@/assets/img/1798-check-animation.json'
 import Memo from "@/components/MainView/Body/Memo.vue"
  
 export type TimelineStatus = "normal"|"wait"|"process"|"finish"|"error"|"success";
-export type NameStatus = "success"|"info"|"warning"|"danger"|""
+export type NameStatus = "success"|"info"|"warning"|"danger"|""|"primary";
 
 export interface TimelineParam {
   // 具体项目uuid信息,根据uuid查询数据库中项目的时间线
@@ -251,7 +247,7 @@ const NameStatusMap:{
   [key:string]:NameStatus
 } = {
   "执行中" : "info",
-  "已交付" : "",
+  "已交付" : "primary",
   "已完成" : "success",
   "已终止" : "danger",
   "暂停中" : "info",
@@ -262,7 +258,6 @@ let view_timeline_data:Ref<
 {
   info:TimelineInfo,
   editing: boolean,
-  show_memo: boolean,   ///< 是否展示备忘录
 }[]> = ref([])
 
 onMounted(()=>{
@@ -271,7 +266,6 @@ onMounted(()=>{
       view_timeline_data.value.push({
         info:_.cloneDeep(item),
         editing:false,
-        show_memo:false,        ///< 有记录的显示，没记录的移动到坐标上显示
       })
     })
     // view_timeline_data.value = _.cloneDeep(res);
@@ -289,6 +283,8 @@ const timestyle = computed(()=>{
   }
 })
 
+// 是否展示备忘录
+const show_memo:Ref<boolean> = ref(false);
 //可编辑状态
 const edit:Ref<boolean> = ref(false);
 //动画状态
@@ -471,6 +467,8 @@ function DelRecent(timestamp:number, index:number){
   :deep() .el-step__line
     width: 78%
     margin-left: 6em
+  :deep() .el-step__head
+    margin-left: 2.5em
 
 .ml-2
   margin: 0em 1em;

@@ -4,13 +4,14 @@
     <!-- <el-button type="primary" size="small" :icon="List" @click="remind_edit=!remind_edit; remind_edit?activeNames=['1']:activeNames=[]"/> -->
     <el-collapse-item name="1">
     <template #title>
-        备忘录
+        <span>备忘录</span>
         <el-tag v-for="item,index in memo_set" :key="index" class="memo-tag" :type="item==MemoTypes.normal?'danger':item==MemoTypes.changeTime?'warning':'info'">{{item}}</el-tag>
     </template>
     <div v-for="item,index in memo_list" :key="item.timestamp">
         <el-divider content-position="left">
-        <el-tag :type="item.type==MemoTypes.normal?'danger':item.type==MemoTypes.changeTime?'warning':'info'">{{item.type}}</el-tag>
+        <el-tag style="margin-right: 1em;" :type="item.type==MemoTypes.normal?'danger':item.type==MemoTypes.changeTime?'warning':'info'">{{item.type}}</el-tag>
         {{ String(GetWeekIndex(item.timestamp)[1])+"年 第"+String(GetWeekIndex(item.timestamp)[0])+"周 第"+(memo_list.length-index)+"条 "+item.author }}
+        <el-icon style="margin-left: 1em;" v-if="item.archived" color="green"><CircleCheck /></el-icon>
         </el-divider>
         <div class="text">{{ item.content }}</div>
     </div>
@@ -86,7 +87,7 @@
         </el-form-item> 
         </el-form>
     </div>
-    <el-divider v-else content-position="left">
+    <el-divider v-else-if="editable" content-position="left">
         <el-button type="primary" size="small" :icon="List" @click="remind_edit=!remind_edit; remind_edit?activeNames=['1']:activeNames=[]"/>
     </el-divider>
     </el-collapse-item>
@@ -94,16 +95,10 @@
 </template>
 
 <script lang="ts" setup>
-import { Edit, 
-         ChatDotRound, 
-         ChatLineRound, 
-         ChatRound, 
-         Delete, 
-         List,
+import { List,
          Check, 
-         VideoPause,
          Close,
-         Connection, 
+         CircleCheck,
 } from '@element-plus/icons-vue'
 import { onMounted, reactive, ref } from 'vue';
 import type { Ref } from "vue"
@@ -116,26 +111,16 @@ import type { ExpandItemData } from '@/assets/js/itemtable';
 import { ElMessage, type FormInstance } from 'element-plus';
 import { GetOption, OPTION_TYPE } from '@/assets/js/itemform';
 import _ from 'lodash'
+import { InCurrentWeek } from '@/assets/js/common'
 
 export interface MomeParam {
   // 具体项目uuid信息,根据uuid查询数据库中备忘录
   uuid: string,
   // 备忘时间线的对应的时间戳
   timestamp: number,
+  // 默认修改状态
+  status: ItemStatus,
 };
-
-const user_info = UserInfo()
-
-const prop = defineProps<MomeParam>()
-
-// 提供外部监听的项目状态
-const emit = defineEmits(['itemChange'])
-
-//备忘录编辑状态
-const remind_edit:Ref<boolean> = ref(false);
-const activeNames:Ref<string[]> = ref([]);
-let memo_list:Ref<MemoInfo[]> = ref([]);
-let memo_set:Ref<Set<MemoTypes>> = ref(new Set())
 
 //待办内容
 type memo_input_t = {
@@ -143,7 +128,35 @@ type memo_input_t = {
     item:ItemChange,
 }
 
-let memo:memo_input_t = ResetMemoInput();
+const prop = defineProps<MomeParam>()
+const user_info = UserInfo()
+// 提供外部监听的项目状态
+const emit = defineEmits(['itemChange'])
+
+//备忘录编辑状态
+const editable:Ref<boolean> = ref(InCurrentWeek(prop.timestamp));
+const remind_edit:Ref<boolean> = ref(false);
+const activeNames:Ref<string[]> = ref([]);
+let memo_list:Ref<MemoInfo[]> = ref([]);
+let memo_set:Ref<Set<MemoTypes>> = ref(new Set())
+
+//当前备忘录状态信息
+let memo:memo_input_t;
+//项目子状态
+let subtype_options:Ref<string[]> = ref([])
+onMounted(async ()=>{
+    subtype_options.value = await GetOption(OPTION_TYPE.subtype);
+    memo = ResetMemoInput();
+
+    RpcGetMemo(prop.uuid, prop.timestamp).then((res:MemoInfo[])=>{
+        memo_list.value = _.cloneDeep(res);
+        memo_list.value.forEach(it=>{
+            memo_set.value.add(it.type)
+        })
+    }).catch((err)=>{
+        ElMessage.error(err.message)
+    })
+})
 
 /**
  * 待办内容复位
@@ -158,8 +171,10 @@ function ResetMemoInput()
             author: user_info.user_name,
             link_uuid: [],
             timestamp: new Date().getTime(),
-            src_uuid: prop.uuid,
+            src_item_uuid: prop.uuid,
+            src_item_name: "",
             src_timeline_stamp: prop.timestamp,
+            archived: false,
         },
         item:{
             timestamp: new Date().getTime(),
@@ -185,6 +200,10 @@ function MemoSubmit(formEl: FormInstance | undefined)
                     if(memo.info.type != MemoTypes.normal) {
                         emit('itemChange', memo.item);
                     }
+                    if(memo.info.type==MemoTypes.changeStatus)
+                    {
+                        memo.info.content=`修改为:「${memo.item.status}」状态, 「${memo.item.subtype}」类型 `
+                    }
                     memo_list.value.splice(0,0,_.cloneDeep(memo.info));
                     ElMessage.success("备忘录新增成功");
                 }
@@ -206,19 +225,6 @@ function MemoSubmit(formEl: FormInstance | undefined)
     })
 }
 
-let subtype_options:Ref<string[]> = ref([])
-onMounted(async ()=>{
-    subtype_options.value = await GetOption(OPTION_TYPE.subtype);
-    RpcGetMemo(prop.uuid, prop.timestamp).then((res:MemoInfo[])=>{
-        memo_list.value = _.cloneDeep(res);
-        memo_list.value.forEach(it=>{
-            memo_set.value.add(it.type)
-        })
-    }).catch((err)=>{
-        ElMessage.error(err.message)
-    })
-})
-
 </script>
 
 <style lang="stylus" scoped>
@@ -230,4 +236,10 @@ onMounted(async ()=>{
 
 .memo-tag
   margin-left: 1em
+
+.el-divider
+  :deep() .el-divider__text
+    display: flex
+    align-items: center
+
 </style>

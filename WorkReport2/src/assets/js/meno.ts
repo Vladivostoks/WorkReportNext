@@ -16,18 +16,22 @@ export interface MemoInfo{
   timestamp: number,
 
   // 备忘源项目uuid
-  src_uuid: string,
+  src_item_uuid: string,
+  // 备忘源项目名称
+  src_item_name: string,
   // 备忘源时间线id
   src_timeline_stamp: number,
 
   // 备忘录类型
   type: MemoTypes,
+
+  // 备忘录归档状态
+  archived: boolean,
+
   // 备忘录人员
   author: string,
   // 备忘录内容
   content: string,
-  // 备忘关联项目uuid
-  link_uuid: string[],
 }
 
 export interface ItemChange{
@@ -68,8 +72,17 @@ export async function RpcGetMemo(uuid:string, timestamp:number):Promise<MemoInfo
     return ret;
 }
 
-//获取所有备忘录
-export async function RpcGetAllMemo(cycle_closed:boolean, memo_type:MemoTypes):Promise<MemoInfo[]>
+/**
+ * 获取所有闭环类型的备忘录,区分是否归档
+ * @param archived 
+ * @param timestamp 
+ * @param memo_type 
+ * 
+ * @returns 
+ */
+export async function RpcGetAllMemo(archived:boolean,
+                                    timestamp:number=0, 
+                                    memo_type:MemoTypes=MemoTypes.normal):Promise<MemoInfo[]>
 {
     let ret:MemoInfo[] = [];
 
@@ -80,8 +93,9 @@ export async function RpcGetAllMemo(cycle_closed:boolean, memo_type:MemoTypes):P
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {
-          cycle_closed: cycle_closed,
-          memo_type: memo_type
+          archived: archived,
+          timestamp: timestamp,
+          memo_type: memo_type,
         }
     }).then((res)=>{
         ret = res.data
@@ -126,18 +140,20 @@ export async function RpcPushMemo(uuid:string, timestamp:number, data:MemoInfo):
 }
 
 /**
- * 删除备忘
+ * 归档/回档备忘录
  * @param uuid 项目id
  * @param timestamp 备忘录时间戳
+ * @param archived 归档/回档
  * @returns 
  */
-export async function RpcDeleteMemo(uuid:string, timestamp:number):Promise<boolean>
+export async function RpcMemoArchivedChange(timestamps:number[], 
+                                            archived:boolean):Promise<boolean>
 {
     let ret:boolean = false;
     
     await axios({
         url:'/memo',
-        method: 'delete',
+        method: 'put',
         timeout: 15000,
         responseType: 'json',
         responseEncoding: 'utf8', 
@@ -145,8 +161,8 @@ export async function RpcDeleteMemo(uuid:string, timestamp:number):Promise<boole
                 'Content-Type': 'application/json;charset=UTF-8'
         },
         data:{
-          uuid:uuid,
-          timestamp: timestamp
+          timestamps: timestamps,
+          archived: archived,
         }
     }).then((res) => {
         ret = res.data.ret;

@@ -20,8 +20,14 @@ let memo_get_api = {
             content: "备忘测试\r\n 1.asdasds \r\n 2.sadsasd",
             // 备忘人员
             author: "Ayden.Shu",
-            // 备忘关联项目uuid
-            link_uuid: "uuid-uuid-uuid-uuid",
+
+    src_item_uuid: 'uuid-uuid-uuid-uuid',
+    // 备忘源项目名称
+    src_item_name: '测试项目3',
+    // 备忘源时间线id
+    src_timeline_stamp: 123123123,
+
+            archived: false,
         },{
             // 备忘时间戳key
             timestamp: new Date().getTime(),
@@ -31,8 +37,14 @@ let memo_get_api = {
             content: "备忘测试1",
             // 备忘人员
             author: "Ayden.Shu",
-            // 备忘关联项目uuid
-            link_uuid: "uuid-uuid-uuid-uuid",
+
+    src_item_uuid: 'uuid-uuid-uuid-uuid',
+    // 备忘源项目名称
+    src_item_name: '测试项目',
+    // 备忘源时间线id
+    src_timeline_stamp: 123123123,
+
+            archived: true,
         },{
             // 备忘时间戳key
             timestamp: new Date().getTime(),
@@ -40,19 +52,25 @@ let memo_get_api = {
             type: MemoTypes.normal,
             // 备忘录内容
             content: "备忘测试2",
-            // 备忘关联项目uuid
-            link_uuid: "uuid-uuid-uuid-uuid",
-        },{
-            // 备忘时间戳key
-            timestamp: new Date().getTime(),
-            // 备忘录类型
-            type: MemoTypes.changeTime,
-            // 备忘录内容
-            content: "时间修改",
             // 备忘人员
             author: "Ayden.Shu",
-            // 备忘关联项目uuid
-            link_uuid: "uuid-uuid-uuid-uuid",
+            archived: true,
+
+    src_item_uuid: 'uuid-uuid-uuid-uuid',
+    // 备忘源项目名称
+    src_item_name: '测试项目2',
+    // 备忘源时间线id
+    src_timeline_stamp: 123123123,
+        // },{
+        //     // 备忘时间戳key
+        //     timestamp: new Date().getTime(),
+        //     // 备忘录类型
+        //     type: MemoTypes.changeTime,
+        //     // 备忘录内容
+        //     content: "时间修改",
+        //     // 备忘人员
+        //     author: "Ayden.Shu",
+        //     archived: true,
         },{
             // 备忘时间戳key
             timestamp: new Date().getTime(),
@@ -62,8 +80,7 @@ let memo_get_api = {
             content: "状态修改",
             // 备忘人员
             author: "Ayden.Shu",
-            // 备忘关联项目uuid
-            link_uuid: "uuid-uuid-uuid-uuid",
+            archived: true,
         }];
   }
 }
@@ -76,9 +93,9 @@ let memo_post_api = {
     }
 }
 
-let memo_del_api = {
+let memo_put_api = {
     url: '/memo',
-    method: 'del',
+    method: 'put',
     response: ({ query }) => {
         return { ret:true }
     }
@@ -87,7 +104,7 @@ let memo_del_api = {
 export default [
     memo_get_api,
     memo_post_api,
-    memo_del_api
+    memo_put_api
 ] as MockMethod[];
 
 

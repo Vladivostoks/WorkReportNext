@@ -52,7 +52,7 @@ export function GetWeekInterval(start_timestamp:number, end_timestamp:number):nu
  * @param end_timestamp 结束时间
  * @returns 
  */
-export function InCurrentWeek(timestamp:number)
+export function InCurrentWeek(timestamp:number):boolean
 {
     if(GetWeekIndex(timestamp)[0] == GetWeekIndex(new Date().getTime())[0]
     && GetWeekIndex(timestamp)[1] == GetWeekIndex(new Date().getTime())[1])

@@ -22,9 +22,11 @@ class MemoList(object):
                                     timestamp           DATETIME NOT NULL,
                                     src_item_uuid       TEXT NOT NULL,
                                     src_item_name       TEXT NOT NULL,
+                                    src_item_brief      BLOB,
                                     src_timeline_stamp  DATETIME NOT NULL,
                                     content             BLOB,
                                     author              TEXT NOT NULL,
+                                    archived_author     TEXT,
                                     type                TEXT NOT NULL,
                                     archived            BOOLEAN NOT NULL);
                               """
@@ -43,17 +45,21 @@ class MemoList(object):
     __ADD_MEMO = """REPLACE INTO %(memo_list_table)s(timestamp,
                                                      src_item_uuid,
                                                      src_item_name,
+                                                     src_item_brief,
                                                      src_timeline_stamp,
                                                      content,
                                                      author,
+                                                     archived_author,
                                                      type,
                                                      archived)
                                               VALUES('%(timestamp)d',
                                                      '%(src_item_uuid)s',
                                                      '%(src_item_name)s',
+                                                     '%(src_item_brief)s',
                                                      '%(src_timeline_stamp)d',
                                                      '%(content)s',
                                                      '%(author)s',
+                                                     '',
                                                      '%(type)s',
                                                      0);
                  """
@@ -96,6 +102,7 @@ class MemoList(object):
                  timestamp,
                  src_item_uuid,
                  src_item_name,
+                 src_item_brief,
                  src_timeline_stamp,
                  content,
                  author,
@@ -106,6 +113,7 @@ class MemoList(object):
                                               "timestamp":timestamp,
                                               "src_item_uuid":src_item_uuid,
                                               "src_item_name":src_item_name,
+                                              "src_item_brief":src_item_brief,
                                               "src_timeline_stamp":src_timeline_stamp,
                                               "content":content,
                                               "author":author,
@@ -133,7 +141,7 @@ class MemoList(object):
         return True
 
     #更新指定记录
-    def update_memos(self, timestamps, archived):
+    def update_memos(self, archived_author, timestamps, archived):
         if len(timestamps) <= 0:
             return True
 
@@ -141,7 +149,7 @@ class MemoList(object):
             cursor = self.__db.cursor()
             # 归档/回档记录
             placeholders = ", ".join(["?"] * len(timestamps))
-            sql = f"UPDATE {self.__table_name} SET archived = {archived} WHERE timestamp IN ({placeholders})"
+            sql = f"UPDATE {self.__table_name} SET archived = '{archived}' ,archived_author='{archived_author}' WHERE timestamp IN ({placeholders})"
             logger.info(sql)
 
             cursor.execute(sql, timestamps)
@@ -174,8 +182,8 @@ class MemoList(object):
             cursor = self.__db.cursor()
 
             cursor.execute(self.__GET_MEMO % {"memo_list_table":self.__table_name,
-                                               "src_item_uuid": src_uuid,
-                                               "src_timeline_stamp": src_timestamp})
+                                              "src_item_uuid": src_uuid,
+                                              "src_timeline_stamp": src_timestamp})
             result = cursor.fetchall()
             cursor.close()
 
@@ -188,10 +196,6 @@ class MemoList(object):
         result=[]
         try:
             cursor = self.__db.cursor()
-            logger.info(self.__GET_MEMOS % {"memo_list_table":self.__table_name,
-                                               "cut_time": timestamp,
-                                               "memo_type": memo_type,
-                                               "archived": archived})
             cursor.execute(self.__GET_MEMOS % {"memo_list_table":self.__table_name,
                                                "cut_time": timestamp,
                                                "memo_type": memo_type,

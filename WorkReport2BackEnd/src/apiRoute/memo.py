@@ -58,15 +58,15 @@ class Memo(Resource):
         put_parser.add_argument('src_item_name', dest='src_item_name',
                                 type=str, location='json',
                                 required=True, help='Need input src_item_name for pose.')
+        put_parser.add_argument('src_item_brief', dest='src_item_brief',
+                                type=str, location='json',
+                                required=True, help='Need input src_item_brief for pose.')
         put_parser.add_argument('src_timeline_stamp', dest='src_timeline_stamp',
                                 type=int, location='json',
                                 required=True, help='Need input src_timeline_stamp for pose.')
         put_parser.add_argument('type', dest='type',
                                 type=str, location='json',
                                 required=True, help='Need input type for pose.')
-        # put_parser.add_argument('archived', dest='archived',
-        #                         type=bool, location='json',
-        #                         required=False)
         put_parser.add_argument('author', dest='author',
                                 type=str, location='json',
                                 required=True, help='Need input author for pose.')
@@ -87,6 +87,9 @@ class Memo(Resource):
     
     def put(self):
         put_parser = reqparse.RequestParser()
+        put_parser.add_argument('archived_author', dest='archived_author',
+                                type=str, location='json',
+                                required=True, help='Need input memo archived_author.')
         put_parser.add_argument('timestamps', dest='timestamps',
                                 type=int, location='json', action='append',
                                 required=True, help='Need input memo timestamps.')

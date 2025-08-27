@@ -1,8 +1,13 @@
 <template>
-  <el-table :data="memo_table" style="height:auto; max-height:70vh;">
-    <el-table-column prop="checked" min-width="6%">
+  <el-table :data="memo_table" style="height:70vh;">
+    <el-table-column prop="checked" min-width="3%">
       <template #default="scope">
         <el-checkbox v-model="scope.row.checked" />
+      </template>
+    </el-table-column>
+    <el-table-column prop="index" min-width="3%">
+      <template #default="scope">
+        <span>{{ scope.$index+1 }}</span>
       </template>
     </el-table-column>
     <el-table-column prop="timestamp" label="时间" min-width="15%">
@@ -42,11 +47,14 @@
             <el-tag class="ml-2">{{scope.row.link_timeline_info.author}}</el-tag>
             <el-card>
               <template #header>
+                <div class="text">{{ scope.row.memo.src_item_brief }}</div>
+              </template>
                 <div class="text_title">【当前进展】：</div>
                 <div class="text">{{ scope.row.link_timeline_info.progress }}</div>
-              </template>
+              <template #footer>
                 <div class="text_title">【结果/计划】：</div>
                 <div class="text">{{ scope.row.link_timeline_info.result }}</div>
+              </template>
             </el-card>
           </div>
           <div v-else>
@@ -126,9 +134,10 @@ const UpdateMemo = async()=>{
   try {
     // step1: 按照是否归档进行所有的备忘录读取
     const res: MemoInfo[] = await RpcGetAllMemo(prop.archived)
+    const sortedRes = res.sort((a, b) => b.timestamp - a.timestamp)
 
     memo_table.splice(0, memo_table.length);
-    res.forEach(it=>{
+    sortedRes.forEach(it=>{
       memo_table.push({
         memo:it,
         checked: false,

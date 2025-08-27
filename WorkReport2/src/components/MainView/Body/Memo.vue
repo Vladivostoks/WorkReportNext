@@ -21,11 +21,11 @@
         </el-divider>
         <el-form ref="rule_form" :model="memo" label-width="120px">
         <div>
-            <el-form-item label="备忘类型" prop="status">
+            <!-- <el-form-item label="备忘类型" prop="status">
                 <el-radio-group v-model="memo.info.type" size="small">
                 <el-radio-button v-for="key in MemoTypes" :key="key" :label="key" fill="#009EFF"/>
                 </el-radio-group>
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item v-if="memo.info.type!=MemoTypes.changeStatus" 
                 label="备忘事项" 
                 prop="info.content"
@@ -204,7 +204,8 @@ function MemoSubmit(formEl: FormInstance | undefined)
                 if(res)
                 {
                     if(memo.info.type != MemoTypes.normal) {
-                        emit('itemChange', memo.item);
+                        // emit('itemChange', memo.item);
+                        // 读取并更新项目信息
                     }
                     if(memo.info.type==MemoTypes.changeStatus)
                     {

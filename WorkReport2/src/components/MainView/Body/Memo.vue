@@ -106,7 +106,7 @@ import { GetWeekIndex } from '@/assets/js/common'
 import { ItemStatus } from '@/assets/js/timeline'
 import { RpcGetMemo, RpcPushMemo, type ItemChange, type MemoInfo } from '@/assets/js/memo'
 import { MemoTypes } from '@/assets/js/memo'
-import { UserInfo, USER_STATUS } from '@/stores/counter';
+import { UserInfo } from '@/stores/counter';
 import type { ExpandItemData } from '@/assets/js/itemtable';
 import { ElMessage, type FormInstance } from 'element-plus';
 import { GetOption, OPTION_TYPE } from '@/assets/js/itemform';
@@ -178,6 +178,8 @@ function ResetMemoInput()
             src_item_uuid: prop.uuid,
             src_item_name: prop.name,
             src_timeline_stamp: prop.timestamp,
+            src_item_brief: prop.brief,
+            archived_author: "",
             archived: false,
         },
         item:{

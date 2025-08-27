@@ -1,5 +1,5 @@
 <template>
-  <el-table :data="memo_table" style="height:70vh; ">
+  <el-table :data="memo_table" style="height:auto; max-height:70vh;">
     <el-table-column prop="checked" min-width="6%">
       <template #default="scope">
         <el-checkbox v-model="scope.row.checked" />
@@ -10,22 +10,22 @@
         <h3>{{ String(GetWeekIndex(scope.row.memo.timestamp)[1])+"年 第"+String(GetWeekIndex(scope.row.memo.timestamp)[0])+"周" }}</h3>
       </template>
     </el-table-column>
-    <el-table-column prop="name" label="记录人" min-width="6%">
+    <el-table-column prop="name" label="记录人" min-width="10%">
       <template #default="scope">
         <h3>{{ scope.row.memo.author }}</h3>
       </template>
     </el-table-column>
-    <el-table-column v-if="archived" prop="name" label="归档人" min-width="6%">
+    <el-table-column v-if="memo_table.some(row => row.memo.archived_author)"  prop="name" :label="archived?'归档人':'回档人'" min-width="10%">
       <template #default="scope">
-        <h3>{{ scope.row.memo.author }}</h3>
+        <h3>{{ scope.row.memo.archived_author }}</h3>
       </template>
     </el-table-column>
-    <el-table-column prop="address" label="内容" min-width="30%">
+    <el-table-column prop="address" label="内容" min-width="26%">
       <template #default="scope">
         <div class="text">{{ scope.row.memo.content }}</div>
       </template>
     </el-table-column>
-    <el-table-column prop="link_uuid" label="关联项目信息" min-width="31%">
+    <el-table-column prop="link_uuid" label="关联项目信息" min-width="27%">
       <template #default="scope">
         <el-popover placement="top" :width="400" :visible="scope.row.popover_visible">
           <template #reference>
@@ -62,6 +62,7 @@
 import { onMounted, reactive, ref, type Ref } from 'vue'
 import { useDateFormat } from '@vueuse/core'
 import { ElMessage, type FormInstance } from 'element-plus';
+import { UserInfo } from '@/stores/counter';
 
 import { GetWeekIndex, InCurrentWeek } from '@/assets/js/common'
 import { RpcGetAllMemo, RpcMemoArchivedChange, type MemoInfo } from '@/assets/js/memo'
@@ -72,6 +73,7 @@ export interface MemoTableParam {
   archived: boolean,
 }
 
+const user_info = UserInfo()
 const prop = defineProps<MemoTableParam>()
  
 let memo_table:{ 
@@ -124,7 +126,8 @@ const UpdateMemo = async()=>{
   try {
     // step1: 按照是否归档进行所有的备忘录读取
     const res: MemoInfo[] = await RpcGetAllMemo(prop.archived)
-    
+
+    memo_table.splice(0, memo_table.length);
     res.forEach(it=>{
       memo_table.push({
         memo:it,
@@ -133,6 +136,8 @@ const UpdateMemo = async()=>{
         link_timeline_info: undefined,
       })
     })
+
+    console.dir(memo_table)
   } catch (err:any) {
     ElMessage.error(err.message)
   }
@@ -157,7 +162,7 @@ const ArchivedMemo = (archive:boolean) => {
 
   if(timestamps.length>0)
   {
-      RpcMemoArchivedChange(timestamps, archive).then((res:boolean)=>{
+      RpcMemoArchivedChange(user_info.user_name, timestamps, archive).then((res:boolean)=>{
         ElMessage.success(`备忘录${archive?'归档':'回档'}成功!`);
         //从当前列表中移除
         const temp_table = memo_table.filter(it => !it.checked);

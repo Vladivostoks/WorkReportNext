@@ -19,17 +19,22 @@ export interface MemoInfo{
   src_item_uuid: string,
   // 备忘源项目名称
   src_item_name: string,
+  // 备忘源项目简介
+  src_item_brief: string,
   // 备忘源时间线id
   src_timeline_stamp: number,
 
   // 备忘录类型
   type: MemoTypes,
 
-  // 备忘录归档状态
-  archived: boolean,
-
   // 备忘录人员
   author: string,
+
+  // 备忘录归档状态
+  archived: boolean,
+  // 归档/回档人员
+  archived_author: string,
+
   // 备忘录内容
   content: string,
 }
@@ -137,12 +142,13 @@ export async function RpcPushMemo(data:MemoInfo):Promise<boolean>
 
 /**
  * 归档/回档备忘录
- * @param uuid 项目id
+ * @param archived_author 归档/回档人
  * @param timestamp 备忘录时间戳
  * @param archived 归档/回档
  * @returns 
  */
-export async function RpcMemoArchivedChange(timestamps:number[], 
+export async function RpcMemoArchivedChange(archived_author:string,
+                                            timestamps:number[], 
                                             archived:boolean):Promise<boolean>
 {
     let ret:boolean = false;
@@ -157,6 +163,7 @@ export async function RpcMemoArchivedChange(timestamps:number[],
                 'Content-Type': 'application/json;charset=UTF-8'
         },
         data:{
+          archived_author: archived_author,
           timestamps: timestamps,
           archived: archived,
         }

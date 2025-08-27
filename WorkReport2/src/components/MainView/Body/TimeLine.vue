@@ -180,6 +180,7 @@
         </el-card>
         <transition name="el-zoom-in-top"> 
           <div @mouseover="view_timeline_data[index].show_memo = true"> <!--  -->
+            <!-- @item-change="(event) => handleMemoChange(event, index)" -->
             <Memo v-if="view_timeline_data[index].show_memo" 
                   :uuid="prop.uuid" 
                   :timestamp="item.timestamp" 
@@ -455,6 +456,27 @@ function DelRecent(timestamp:number, index:number){
     ElMessage.error(err.message)
   })
 }
+
+// // 处理memo抛出事件，根据时间线index修改时间线信息
+// function handleMemoChange(memo_item:ItemChange, index:number)
+// {
+//   if(memo_item.status)
+//   {
+//     //修改时间线状态
+//     let temp_timeline_info:TimelineInfo = _.cloneDeep(view_timeline_data.value[index].info)
+
+//     temp_timeline_info.status = memo_item.status
+//     EditTimeline(index, view_timeline_data.value[index].info)
+//     if(index==0)
+//     {
+//       emit('statusChange', memo_item.status, 1)
+//     }
+//   }
+//   else if(memo_item.timestamp || memo_item.subtype)
+//   {
+//     //需要修改项目信息
+//   }
+// }
 
 </script>
 <style lang="stylus" scoped>

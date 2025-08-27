@@ -14,8 +14,8 @@ OPTION_TABLE = "option_table"
 LIST_DATA_DB = DATA_DIR+"/list.db3"
 # 事务列表名称
 AFFAIR_LIST_TABLE = "affair_list_table"
-# 项目列表名称
-ITEM_LIST_TABLE = "item_list_table"
+# 备忘录列表
+MEMO_LIST_TABLE = "memo_list_table"
 
 # 事务具体内容数据db的路径,相对执行main.py位置
 AFFAIR_CONTENT_DATA_DB = DATA_DIR+"/affair.db3"

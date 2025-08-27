@@ -10,7 +10,7 @@ FilePath: /Simple-Prj-Manager-System/backend-flask/src/main.py
 import os
 import socket
 import sys
-import logging
+from loguru import logger
 from pprint import pprint 
 from flask import Flask,abort
 from flask import request
@@ -21,14 +21,14 @@ from waitress import serve
 from apiRoute.login import *
 from apiRoute.affair import *
 from apiRoute.option import *
-from apiRoute.item import *
+from apiRoute.memo import *
 
 from dataModel.model_version import DataVersion
 from dataModel.affairs_data import AffairContent,AffairList
 from dataModel.user_data import UserData
 from config.backend_conf import DATA_DIR
 from dataModel.option_data import OptionData
-from dataModel.item_data import ItemList 
+from dataModel.memo_data import MemoList 
 
 #使用pyinstaller打包不能使用相对路径
 if hasattr(sys,'_MEIPASS'):
@@ -66,7 +66,7 @@ api.add_resource(Option,'/option')
 ##
 ## Form Item API
 ##
-api.add_resource(Items,'/item')
+api.add_resource(Memo,'/memo')
 
 def check_port(ip, port=80):
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -76,8 +76,8 @@ def check_port(ip, port=80):
         return False 
     except socket.error as e:
         return True 
- 
-if __name__ == '__main__':
+
+def main():
     #make data dir
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
@@ -89,19 +89,22 @@ if __name__ == '__main__':
         else:
             port = port + 1
 
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
+    # logging.basicConfig(level=logging.INFO,
+    #                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
     #update Data Model
     DataVersion(AffairList(),
                 AffairContent(),
                 UserData(),
-                ItemList(),
+                MemoList(),
                 OptionData("prjtype_opt"),
                 OptionData("prjmodel_opt"),
                 OptionData("dutyperson_opt"),
                 OptionData("relateperson_opt"))
-    logging.basicConfig()
-    logger = logging.getLogger('waitress')
-    logger.setLevel(logging.DEBUG)
+    # logging.basicConfig()
+    # logger = logging.getLogger('waitress')
+    # logger.setLevel(logging.DEBUG)
     # serve(app, host="0.0.0.0", port=port)
     app.run(debug=False,host='0.0.0.0',port=port)
+
+if __name__ == '__main__':
+    main()

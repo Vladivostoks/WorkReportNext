@@ -7,7 +7,7 @@ import uuid
 import logging
 
 from config.backend_conf import LIST_DATA_DB,AFFAIR_CONTENT_DATA_DB
-from config.backend_conf import AFFAIR_LIST_TABLE,ITEM_LIST_TABLE,AFFAIR_CONTENT_DATA_DB
+from config.backend_conf import AFFAIR_LIST_TABLE,AFFAIR_CONTENT_DATA_DB
 from dataModel.model_version import DataModel
 from dataModel.option_data import OptionData
 
@@ -444,8 +444,7 @@ class AffairList(DataModel):
             self.__db.row_factory = dict_factory
 
             cursor = self.__db.cursor()
-            cursor.execute(self.__CREAT_AFFAIRS_LIST_TABLE % {"affair_list_table":self.__table_name,
-                                                              "item_list_table":ITEM_LIST_TABLE})
+            cursor.execute(self.__CREAT_AFFAIRS_LIST_TABLE % {"affair_list_table":self.__table_name})
             cursor.execute(self.__CREAT_AFFAIRS_LIST_INDEX % {"affair_list_table":self.__table_name})
 
             cursor.close()

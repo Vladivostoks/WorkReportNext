@@ -1,0 +1,39 @@
+[project]
+name = "report"
+version = "2.0.0"
+description = "BWD Report Server Backend."
+authors = [
+    {name = "Ayden.Shu",email = "neolandg@gmail.com"}
+]
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9,<3.14"
+dependencies = [
+    "flask (>=3.1.2,<4.0.0)",
+    "flask-restful (>=0.3.10,<0.4.0)",
+    "waitress (>=3.0.2,<4.0.0)",
+    "xpinyin (>=0.7.7,<0.8.0)",
+    "loguru (>=0.7.3,<0.8.0)"
+]
+
+[tool.poetry]
+packages = [
+    { include = "**/*", from = "src" },
+]
+
+[tool.poetry.scripts]
+main = "main:main"  # 注意：这里指向 src/main.py 中的 main 函数
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# 虚拟环境配置
+[virtualenvs]
+options.system-site-packages = true
+
+# 镜像源配置
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"

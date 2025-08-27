@@ -104,8 +104,8 @@ import { onMounted, reactive, ref } from 'vue';
 import type { Ref } from "vue"
 import { GetWeekIndex } from '@/assets/js/common'
 import { ItemStatus } from '@/assets/js/timeline'
-import { RpcGetMemo, RpcPushMemo, type ItemChange, type MemoInfo } from '@/assets/js/meno'
-import { MemoTypes } from '@/assets/js/meno'
+import { RpcGetMemo, RpcPushMemo, type ItemChange, type MemoInfo } from '@/assets/js/memo'
+import { MemoTypes } from '@/assets/js/memo'
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 import type { ExpandItemData } from '@/assets/js/itemtable';
 import { ElMessage, type FormInstance } from 'element-plus';
@@ -116,6 +116,10 @@ import { InCurrentWeek } from '@/assets/js/common'
 export interface MomeParam {
   // 具体项目uuid信息,根据uuid查询数据库中备忘录
   uuid: string,
+  // 具体项目名称信息,省去一次查询
+  name: string,
+  // 具体项目简介,省去一次查询
+  brief: string,
   // 备忘时间线的对应的时间戳
   timestamp: number,
   // 默认修改状态
@@ -172,7 +176,7 @@ function ResetMemoInput()
             link_uuid: [],
             timestamp: new Date().getTime(),
             src_item_uuid: prop.uuid,
-            src_item_name: "",
+            src_item_name: prop.name,
             src_timeline_stamp: prop.timestamp,
             archived: false,
         },
@@ -194,7 +198,7 @@ function MemoSubmit(formEl: FormInstance | undefined)
     formEl.validate(async (valid) => {
         if (valid) 
         {
-            await RpcPushMemo(prop.uuid, prop.timestamp, memo.info).then((res:boolean)=>{
+            await RpcPushMemo(memo.info).then((res:boolean)=>{
                 if(res)
                 {
                     if(memo.info.type != MemoTypes.normal) {

@@ -179,9 +179,14 @@
             <div class="text">{{ item.result }}</div>
         </el-card>
         <transition name="el-zoom-in-top"> 
-          <div @mouseover="show_memo = true"> <!-- @mouseover="view_timeline_data[index].show_memo = false" -->
-            <span>备忘录</span>
-            <Memo v-show="show_memo" :uuid="prop.uuid" :timestamp="item.timestamp" :status="item.status"></Memo>
+          <div @mouseover="view_timeline_data[index].show_memo = true"> <!--  -->
+            <Memo v-if="view_timeline_data[index].show_memo" 
+                  :uuid="prop.uuid" 
+                  :timestamp="item.timestamp" 
+                  :status="item.status"
+                  :name="prop.item_name"
+                  :brief="prop.item_brief"></Memo>
+            <span v-else>备忘录</span>
           </div>
         </transition>
       </template>
@@ -226,6 +231,9 @@ export interface TimelineParam {
   end_time: number,
   // 是否可编辑
   editable?:boolean,
+  //项目名称和简介
+  item_name: string,
+  item_brief: string,
 }
 
 const user_info = UserInfo()
@@ -258,6 +266,7 @@ let view_timeline_data:Ref<
 {
   info:TimelineInfo,
   editing: boolean,
+  show_memo: boolean,
 }[]> = ref([])
 
 onMounted(()=>{
@@ -266,6 +275,7 @@ onMounted(()=>{
       view_timeline_data.value.push({
         info:_.cloneDeep(item),
         editing:false,
+        show_memo:false,
       })
     })
     // view_timeline_data.value = _.cloneDeep(res);
@@ -283,8 +293,6 @@ const timestyle = computed(()=>{
   }
 })
 
-// 是否展示备忘录
-const show_memo:Ref<boolean> = ref(false);
 //可编辑状态
 const edit:Ref<boolean> = ref(false);
 //动画状态
@@ -346,7 +354,7 @@ function Submit(data:TimelineInfo):boolean{
     //view更新
     if(res)
     {
-      view_timeline_data.value.splice(0,0,_.cloneDeep({info:data,editing:false}));
+      view_timeline_data.value.splice(0,0,_.cloneDeep({info:data,editing:false,show_memo:false,}));
       emit('statusChange', view_timeline_data.value[0].info.status, 1)
       ElMessage.success("时间线新增成功");
       new_timeline=Reset();

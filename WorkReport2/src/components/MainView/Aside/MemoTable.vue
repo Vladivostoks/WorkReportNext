@@ -1,34 +1,39 @@
 <template>
-  <el-table :data="memo_table">
+  <el-table :data="memo_table" style="height:70vh; ">
     <el-table-column prop="checked" min-width="6%">
       <template #default="scope">
         <el-checkbox v-model="scope.row.checked" />
       </template>
     </el-table-column>
-    <el-table-column prop="timestamp" label="时间" min-width="25%">
+    <el-table-column prop="timestamp" label="时间" min-width="15%">
       <template #default="scope">
         <h3>{{ String(GetWeekIndex(scope.row.memo.timestamp)[1])+"年 第"+String(GetWeekIndex(scope.row.memo.timestamp)[0])+"周" }}</h3>
       </template>
     </el-table-column>
-    <el-table-column prop="name" label="记录人" min-width="20%">
+    <el-table-column prop="name" label="记录人" min-width="6%">
       <template #default="scope">
         <h3>{{ scope.row.memo.author }}</h3>
       </template>
     </el-table-column>
-    <el-table-column prop="address" label="内容">
+    <el-table-column v-if="archived" prop="name" label="归档人" min-width="6%">
+      <template #default="scope">
+        <h3>{{ scope.row.memo.author }}</h3>
+      </template>
+    </el-table-column>
+    <el-table-column prop="address" label="内容" min-width="30%">
       <template #default="scope">
         <div class="text">{{ scope.row.memo.content }}</div>
       </template>
     </el-table-column>
-    <el-table-column prop="link_uuid" label="关联项目信息" min-width="40%">
+    <el-table-column prop="link_uuid" label="关联项目信息" min-width="31%">
       <template #default="scope">
-        <el-popover placement="right" :width="400" :visible="scope.row.popover_visible">
+        <el-popover placement="top" :width="400" :visible="scope.row.popover_visible">
           <template #reference>
-            <el-button style="margin-left: 0px" 
+            <el-button style="margin-left: 0px; white-space: normal; word-break: break-word; height: auto; line-height: 1.5;" 
                        type='primary' text
                       @click="OpenTimeline(scope.row)">
               {{ scope.row.memo.src_item_name }}
-          </el-button>
+            </el-button>
           </template>
           <!-- 这些都是点击后才进行渲染显示的具体内容 -->
           <div v-if="scope.row.link_timeline_info">
@@ -44,6 +49,9 @@
                 <div class="text">{{ scope.row.link_timeline_info.result }}</div>
             </el-card>
           </div>
+          <div v-else>
+            时间线已删除
+          </div>
         </el-popover>
       </template>
     </el-table-column>
@@ -56,7 +64,7 @@ import { useDateFormat } from '@vueuse/core'
 import { ElMessage, type FormInstance } from 'element-plus';
 
 import { GetWeekIndex, InCurrentWeek } from '@/assets/js/common'
-import { RpcGetAllMemo, RpcMemoArchivedChange, type MemoInfo } from '@/assets/js/meno'
+import { RpcGetAllMemo, RpcMemoArchivedChange, type MemoInfo } from '@/assets/js/memo'
 import { RpcGetTimeline, ItemStatus, type TimelineInfo} from '@/assets/js/timeline'
 
 export interface MemoTableParam {
@@ -74,21 +82,7 @@ let memo_table:{
 }[] = reactive([])
 
 onMounted(async ()=>{
-  try {
-    // step1: 按照是否归档进行所有的备忘录读取
-    const res: MemoInfo[] = await RpcGetAllMemo(prop.archived)
-    
-    res.forEach(it=>{
-      memo_table.push({
-        memo:it,
-        checked: false,
-        popover_visible: false,
-        link_timeline_info: undefined,
-      })
-    })
-  } catch (err:any) {
-    ElMessage.error(err.message)
-  }
+  await UpdateMemo()
 })
 
 async function OpenTimeline(row_info:{memo: MemoInfo,
@@ -105,7 +99,7 @@ async function OpenTimeline(row_info:{memo: MemoInfo,
                                 row_info.memo.src_timeline_stamp,
                                 row_info.memo.src_timeline_stamp);
       row_info.link_timeline_info = res[0]
-
+      
       row_info.popover_visible = true;
     }catch(err:any) {
       ElMessage.error(err.message)
@@ -124,6 +118,25 @@ const ClearMemoTable = () => {
                           popover_visible: boolean})=>{
     it.popover_visible = false 
   })
+}
+
+const UpdateMemo = async()=>{
+  try {
+    // step1: 按照是否归档进行所有的备忘录读取
+    const res: MemoInfo[] = await RpcGetAllMemo(prop.archived)
+    
+    res.forEach(it=>{
+      memo_table.push({
+        memo:it,
+        checked: false,
+        popover_visible: false,
+        link_timeline_info: undefined,
+      })
+    })
+  } catch (err:any) {
+    ElMessage.error(err.message)
+  }
+
 }
 
 const ArchivedMemo = (archive:boolean) => {
@@ -158,6 +171,7 @@ const ArchivedMemo = (archive:boolean) => {
 defineExpose({
   ClearMemoTable,
   ArchivedMemo,
+  UpdateMemo,
 })
 
 </script>

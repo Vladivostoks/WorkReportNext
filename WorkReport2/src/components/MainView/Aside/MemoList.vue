@@ -3,7 +3,7 @@
   <el-dialog v-model="memo_list_show" v-if="memo_list_show" title="待办事项" width="70rem" align-center 
              :show-close="false" :close-on-press-escape="false" :close-on-click-modal="false">
     <div class="demo-collapse">
-    <el-collapse accordion v-model="activeNames">
+    <el-collapse accordion v-model="activeNames" @change=handleUpdate()>
       <el-collapse-item title="已归档" name="已归档">
         <MemoTable ref="memoAchived" :archived="true"></MemoTable>
       </el-collapse-item>
@@ -56,6 +56,10 @@ const handleChange = async (archived: boolean) => {
   }
 }
 
+const handleUpdate = ()=>{
+  memoUnachived.value.UpdateMemo();
+  memoAchived.value.UpdateMemo();
+}
 </script>
 
 <style lang="stylus" scoped>

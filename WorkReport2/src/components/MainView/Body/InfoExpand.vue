@@ -19,7 +19,10 @@
       <el-link @click="CopyUrl">{{ prop.data?.url }}</el-link>
     </el-descriptions-item>
   </el-descriptions>
-  <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" :start_time="prop.data.date" :end_time="end_time" :editable="!(viewback || mode==TableContentType.HistoryItem || mode==TableContentType.Repository)"
+  <Timeline v-if="prop.data.uuid" :uuid="prop.data.uuid" :start_time="prop.data.date" :end_time="end_time" 
+            :editable="!(viewback || mode==TableContentType.HistoryItem || mode==TableContentType.Repository)"
+            :item_name="prop.data.name"
+            :item_brief="prop.data.describe"
             @statusChange="(status, num)=>{emit('update:status', status);emit('num_change', num)}"/>
 </el-card>
 </template>

@@ -59,8 +59,8 @@ export async function RpcGetMemo(uuid:string, timestamp:number):Promise<MemoInfo
         responseType: 'json',
         responseEncoding: 'utf8', 
         params: {
-          uuid: uuid,
-          timestamp: timestamp,
+          src_uuid: uuid,
+          src_timestamp: timestamp,
         }
     }).then((res)=>{
         ret = res.data
@@ -75,7 +75,7 @@ export async function RpcGetMemo(uuid:string, timestamp:number):Promise<MemoInfo
 /**
  * 获取所有闭环类型的备忘录,区分是否归档
  * @param archived 
- * @param timestamp 
+ * @param timestamp 截止时间戳
  * @param memo_type 
  * 
  * @returns 
@@ -111,7 +111,7 @@ export async function RpcGetAllMemo(archived:boolean,
  * 新增备忘
  * @param uuid 
  */
-export async function RpcPushMemo(uuid:string, timestamp:number, data:MemoInfo):Promise<boolean>
+export async function RpcPushMemo(data:MemoInfo):Promise<boolean>
 {
     let ret:boolean = false;
 
@@ -123,10 +123,6 @@ export async function RpcPushMemo(uuid:string, timestamp:number, data:MemoInfo):
         responseEncoding: 'utf8', 
         headers: {
           'Content-Type': 'application/json;charset=UTF-8'
-        },
-        params: {
-          uuid: uuid,
-          timestamp: timestamp,
         },
         data:data
     }).then((res) => {

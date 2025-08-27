@@ -8,8 +8,8 @@
               value-format="x"
               placeholder="基准时间"/>
         <el-radio-group v-else v-model="checkWithCreateTimeStamp" size="large">
-          <el-radio-button :label="false">创建时间</el-radio-button>
-          <el-radio-button :label="true">完成时间</el-radio-button> 
+          <el-radio-button :label="true">创建时间</el-radio-button>
+          <el-radio-button :label="false">完成时间</el-radio-button> 
         </el-radio-group>
       </el-col>
       <el-col :span="8">
@@ -693,6 +693,14 @@ function OpenReview()
   white-space: pre-wrap !important
   word-wrap: break-word !important
   overflow: auto !important
+
+.el-tag
+  white-space: normal !important
+  height: auto !important
+  line-height: 1.5 !important
+  max-width: 150px
+  /* 允许在任意字符间断行 */
+  word-break: break-all
 
 </style>
 

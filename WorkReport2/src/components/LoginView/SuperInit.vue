@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { reactive, ref, type Ref } from 'vue';
 import { userAdd, USER_TYPE } from '@/assets/js/login';
-import type { FormRules } from 'element-plus/es/tokens/form';
+import type { FormRules } from 'element-plus';
 import { ElMessage, type FormInstance } from 'element-plus'
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 

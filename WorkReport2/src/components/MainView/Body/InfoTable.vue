@@ -99,7 +99,6 @@
   <Export :export_start = "export_start"
           :export_end= "export_end"
   :enable="isexport" :quick="isquick" :data="tableData" @DoOutputOpt="isexport=false"/>
-  <!-- <Review :enable="isreview" @close="isreview=false"/> -->
   </el-container>
 </template>
 
@@ -115,7 +114,6 @@ import { DelItems, GetItems, PutItems, type ItemData } from "@/assets/js/itemtab
 import { GetWeekIndex, GetWeekInterval } from '@/assets/js/common';
 import type { BaseItemData, ExpandItemData } from '@/assets/js/itemtable';
 import ItemEditor, { type ItemFormData } from '@/components/MainView/Form/ItemEditor.vue';
-import Review from '@/components/MainView/Form/Review.vue';
 import Export from '@/components/MainView/Form/Export.vue';
 import _ from 'lodash'
 import { ElMessage, type FormInstance } from 'element-plus'
@@ -158,35 +156,34 @@ async function CommonFilter(data:ItemData[]):Promise<ItemData[]>
   let ret_data:ItemData[] = []
 
   const area_options = await GetOption(OPTION_TYPE.area);
-  ret_data = _.cloneDeep(data.filter((iter:ItemData)=>{
-    let ret:boolean = false
 
-    //根据属性进行名称过滤
-    if(user_info.user_lv == USER_TYPE.normalize)
+  // console.log("获取内容")
+  // console.dir(data)
+  ret_data = _.cloneDeep(data.filter((iter:ItemData)=>{
+    let ret:boolean = true; 
+
+    console.log(`当前用户类型${user_info.user_lv}`)
+    console.log(`当前用户名称${user_info.user_name}`)
+    console.dir(user_info)
+
+    //优先根据组别进行选择过滤, 兼容历史项目显示,如果历史项目区域选项不在范围内，且选择了杭州，那么显示
+    if(member_group.value.indexOf(iter.area as string) >= 0
+    || (area_options.indexOf(iter.area??"") < 0
+    && member_group.value.indexOf("杭州") >= 0))
     {
-      iter.person.forEach(element => {
-        if(element.replace(/\d/g, "") == user_info.user_name.replace(/\d/g, ""))
-        {
-          //如果名字中中文相同那么不进行过滤
-          ret = true;
-        }
-      });
+      ret = true;
+    }
+    else
+    {
+      ret = false;
     }
 
-    //根据组别进行选择过滤
-    if(ret)
+    //根据属性进行名称过滤
+    if(ret && user_info.user_lv == USER_TYPE.normalize)
     {
-      //兼容历史项目显示,如果历史项目区域选项不在范围内，且选择了杭州，那么显示
-      if(member_group.value.indexOf(iter.area as string) >= 0
-      || (area_options.indexOf(iter.area??"") < 0
-      && member_group.value.indexOf("杭州") >= 0))
-      {
-        ret = true;
-      }
-      else
-      {
-        ret = false;
-      }
+      console.log(`只显示用户${user_info.user_name}关联项目`)
+
+      ret=iter.person.some(item => item.localeCompare(user_info.user_name, 'zh-CN') === 0)
     }
 
     return ret;
@@ -234,7 +231,8 @@ async function NormalUpdateTable(){
       break;
   }
 
-  console.dir(tableData.value)
+  // console.log("显示内容")
+  // console.dir(tableData.value)
 }
 
 

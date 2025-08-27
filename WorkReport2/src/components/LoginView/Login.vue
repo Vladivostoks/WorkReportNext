@@ -68,14 +68,15 @@ function querySearchAsync(queryString: string, cb: (arg: any) => void) {
 
 async function login(name:string){
     try{
-        let ret:UserCheckResult|boolean = await userLogin(name);
-
+        let ret:UserCheckResult|boolean|any = await userLogin(name);
+        
+        console.dir(ret)
         if(typeof ret !== "boolean") 
         {
             user_info.user_name = ret.user_name 
             user_info.user_ip = ret.user_ip
             user_info.user_status = USER_STATUS.k_logined
-            user_info.user_lv = ret.user_lv
+            user_info.user_lv = ret.user_prop
             user_info.user_group = ret.user_group
 
             // 更新cookie

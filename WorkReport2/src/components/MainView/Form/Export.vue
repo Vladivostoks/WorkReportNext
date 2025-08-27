@@ -102,7 +102,7 @@ import { OPTION_TYPE, GetOption } from "@/assets/js/itemform"
 import { UserInfo, USER_STATUS } from '@/stores/counter';
 import _, { each, indexOf } from 'lodash'
 import {v4 as uuidv4} from 'uuid';
-import type { FormRules } from 'element-plus/es/tokens/form';
+import type { FormRules } from 'element-plus';
 import type { FormInstance } from 'element-plus/es/components/form';
 import { useStorage, type RemovableRef } from '@vueuse/core'
 import { ElMessage, ElMessageBox, valueEquals } from 'element-plus'

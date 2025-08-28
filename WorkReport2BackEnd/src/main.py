@@ -10,9 +10,10 @@ FilePath: /Simple-Prj-Manager-System/backend-flask/src/main.py
 import os
 import socket
 import sys
+import time
+
 from loguru import logger
-import logging
-from flask import Flask, make_response,jsonify
+from flask import Flask, make_response, jsonify, request, g
 from flask_restful import Api
 from waitress import serve
 from flask_httpauth import HTTPBasicAuth
@@ -57,10 +58,26 @@ def unauthorized():
     response.headers['WWW-Authenticate'] = 'Basic realm="Authentication Required"'
     return response
 
-app.config['DIGEST_AUTH_USERNAME'] = 'admin'
-app.config['DIGEST_AUTH_PASSWORD'] = 'qianrushichuandai'
-
 api = Api(app)
+
+@app.before_request
+def log_request_info():
+    """记录请求开始时的基本信息"""
+    g.start_time = time.time() # 记录请求开始时间
+    prefixes = ['/memo', '/option', '/affair', '/user', '/login']
+    if any(request.path.startswith(i) for i in prefixes):
+        logger.info(f'Request started: {request.method} {request.remote_addr}@{request.url}{request.path}')
+
+@app.after_request
+def after_request(response):
+    """请求结束后，记录处理耗时和状态码"""
+    prefixes = ['/memo', '/option', '/affair', '/user', '/login']
+    if any(request.path.startswith(i) for i in prefixes):
+        duration = 0
+        if hasattr(g, 'start_time'):
+            duration = time.time() - g.start_time
+        logger.info(f'Response completed in {duration:.3f} seconds with status {response.status_code}')
+    return response
 
 @app.route('/')
 @auth.login_required
@@ -128,14 +145,14 @@ def main():
 
     logger.info("🚀 Starting Waitress server with Loguru for REPORTER SYS! LONG LIVE EWD Group!")
 
-    # serve(
-    #     app, 
-    #     host='0.0.0.0', 
-    #     port=port,
-    #     ident="Report",  # 服务器标识
-    # )
+    serve(
+        app, 
+        host='0.0.0.0', 
+        port=port,
+        ident="Report",  # 服务器标识
+    )
     # 开发使用此启动服务器
-    app.run(debug=True, host='0.0.0.0', port=port)
+    # app.run(debug=True, host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
     main()

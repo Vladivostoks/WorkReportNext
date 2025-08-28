@@ -96,12 +96,12 @@ onMounted(()=>{
 
 .el-main
     padding: 0 0
-    height: 95vh
+    height: fit-content
 
 .el-footer
     display: flex
     justify-content: center
-    height: fit-content
+    height: 1.5em
 
 .el-divider
     margin: 0 0

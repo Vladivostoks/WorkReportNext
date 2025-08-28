@@ -30,7 +30,7 @@
       </el-col>
   </el-header>
   <el-container>
-  <el-table :data="tableData" ref="tableRef" max-height="96vh - 8em" width="100%" :row-style="RowStyleCalc" row-key="uuid" sortable>
+  <el-table :data="tableData" ref="tableRef" max-height="100vh - 6em" width="100%" :row-style="RowStyleCalc" row-key="uuid" sortable>
     <el-table-column type="expand">
       <template #default="props">
         <InfoExpand :data="props.row" 
@@ -682,8 +682,9 @@ function OpenReview()
   height: 4em;
   background-color: #5470c6;
 
-.el-container
-  // height: 100% - 8em
+// .el-container
+//   section
+//     height: inherit
 
 .el-col
   display: flex;

@@ -11,7 +11,7 @@
     </div>
     <div v-else class="wrapper">
         <div class="gridleft">
-            <el-card>
+            <el-card style="height:100%">
                 <Vue3Lottie :animationData="loginLogo" :loop="false" :delay="200" width="25vw" height="25vh"></Vue3Lottie>
                 <Vue3Lottie :animationData="background" :loop="true" width="25vw" height="25vh"></Vue3Lottie>
             </el-card>
@@ -19,11 +19,11 @@
         <!-- 显示初始化表单 -->
         <div class="gridright">
             <!-- 显示用户信息，并可以点击路由自动跳转到主页面 -->
-            <UserInfoCard v-if="user_info.user_status == USER_STATUS.k_logined"/>
+            <UserInfoCard style="height:100%" v-if="user_info.user_status == USER_STATUS.k_logined"/>
             <!-- 显示登陆界面 -->
-            <LoginCard v-else-if="user_info.user_status == USER_STATUS.k_nologin"/>
+            <LoginCard style="height:100%" v-else-if="user_info.user_status == USER_STATUS.k_nologin"/>
             <!-- 显示初始化信息 -->
-            <SuperInit v-else-if="user_info.user_status == USER_STATUS.k_noinit"/>
+            <SuperInit style="height:100%" v-else-if="user_info.user_status == USER_STATUS.k_noinit"/>
             <div v-else>
             </div>
         </div>
@@ -114,17 +114,17 @@ function route():void {
     display: grid
     grid-template-columns: 1fr 1fr
     gap: 2px
-    grid-template-rows: auto
+    grid-template-rows: 1fr
     align-items: start
     justify-items: stretch
-    height: 100%
+    height: 60vh
 
 .gridleft
     grid-row: 1
     grid-column: 1
 
     align-items: flex-start
-    height: 55vh
+    height: 100%
 
     display: flex
     flex-direction: row
@@ -135,7 +135,7 @@ function route():void {
     grid-column: 2
 
     align-items: flex-start
-    height: 55vh
+    height: 100%
 
     display: flex
     flex-direction: column

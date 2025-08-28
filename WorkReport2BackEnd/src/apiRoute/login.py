@@ -1,11 +1,10 @@
 # -*- coding:utf-8 -*- 
-import pprint
 import uuid
-import sys
 import threading
 import difflib
-from flask import Flask,abort,request
+from flask import abort,request
 from flask_restful import reqparse, Resource
+from marshmallow import ValidationError
 from dataModel import user_data
 from xpinyin import Pinyin
 

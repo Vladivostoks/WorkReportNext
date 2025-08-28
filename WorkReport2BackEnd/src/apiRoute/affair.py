@@ -1,13 +1,8 @@
 # -*- coding:utf-8 -*- 
-import logging
-import pprint
-import sys
 import threading
-import time
-import datetime
-from flask import Flask,abort
 from flask_restful import reqparse, Resource, reqparse
 from dataModel import affairs_data 
+from loguru import logger 
 
 
 # 用户表锁
@@ -173,6 +168,7 @@ class Affairs(Resource):
             # 查询具体事件时间线
             timeline = affairs_data.AffairContent(affair["uuid"]).search_record(affair["date"], req["end_time"])
             last_one = affairs_data.AffairContent(affair["uuid"]).search_latest_record()
+
             AFFAIR_CONTENT_DATA_DB_LOCK.release()
             # TODO: 填充 `status` `changeNum` `progressing`三个字段的
             if len(timeline)>0:

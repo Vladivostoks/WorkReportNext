@@ -1,6 +1,5 @@
 #- * -coding: utf - 8 - * -
-import pprint
-import logging
+from loguru import logger 
 import sqlite3
 from abc import abstractmethod, ABCMeta
 
@@ -143,7 +142,7 @@ class DataVersion(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
     def __del__(self):
         self.__db.close()
@@ -158,7 +157,7 @@ class DataVersion(DataModel):
             cursor.close()
             self.__db.commit()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
     def __version_check(self):
         """ 检查本地版本号
@@ -173,5 +172,5 @@ class DataVersion(DataModel):
             if flag==True:
                 self.__local_ver_update()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 

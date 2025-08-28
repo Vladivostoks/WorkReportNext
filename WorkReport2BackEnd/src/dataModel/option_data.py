@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*- 
 import sqlite3
-import pprint
-import logging
+from loguru import logger 
 
 from dataModel.model_version import DataModel
 from config.backend_conf import CONFIG_DB,USER_TABLE
@@ -39,7 +38,7 @@ class OptionData(DataModel):
             cursor.close()
             self.__db.commit()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
     def __del__(self):
         self.__db.close()
@@ -59,7 +58,7 @@ class OptionData(DataModel):
             cursor.close()
             self.__db.commit()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -73,7 +72,7 @@ class OptionData(DataModel):
             cursor.close()
             self.__db.commit()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -88,7 +87,7 @@ class OptionData(DataModel):
             for i in ret:
                 result = result+i
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         return result
 

@@ -150,7 +150,6 @@ class MemoList(object):
             # 归档/回档记录
             placeholders = ", ".join(["?"] * len(timestamps))
             sql = f"UPDATE {self.__table_name} SET archived = '{archived}' ,archived_author='{archived_author}' WHERE timestamp IN ({placeholders})"
-            logger.info(sql)
 
             cursor.execute(sql, timestamps)
             cursor.close()

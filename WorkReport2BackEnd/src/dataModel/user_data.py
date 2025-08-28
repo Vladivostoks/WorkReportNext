@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*- 
 import sqlite3
-import pprint
-import logging
+from loguru import logger 
 
 from dataModel.model_version import DataModel
 
@@ -64,7 +63,7 @@ class UserData(DataModel):
                 cursor.close()
                 self.__db.commit()
             except sqlite3.Error as e:
-                logging.error(e)
+                logger.exception(e)
             ret=True
 
         #return __update_V1_0_2(local_verisons)
@@ -93,7 +92,7 @@ class UserData(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
     def __del__(self):
         self.__db.close()
@@ -112,7 +111,7 @@ class UserData(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -128,7 +127,7 @@ class UserData(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -144,14 +143,14 @@ class UserData(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
 
     #用户校验
     def user_check(self,username,passwd,user_ip,user_token):
-        result = []
+        result = {}
         #记录本地用户登录的设备ip特征，并生成token
         try:
             cursor = self.__db.cursor()
@@ -163,7 +162,7 @@ class UserData(DataModel):
             cursor.close()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         if result == None:
             #无此用户
@@ -178,7 +177,7 @@ class UserData(DataModel):
         cursor.close()
         self.__db.commit()
 
-        return True,result['user_prop']
+        return True, result['user_prop']
 
     #是否存在超级用户
     def has_super_user(self):
@@ -194,7 +193,7 @@ class UserData(DataModel):
 
             cursor.close()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         if len(result)<=0:
             # 缺少超级用户
@@ -220,7 +219,7 @@ class UserData(DataModel):
 
             cursor.close()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         return [item["user_name"] for item in result]
 
@@ -242,7 +241,7 @@ class UserData(DataModel):
 
             cursor.close()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         # 修饰
         for res in result:

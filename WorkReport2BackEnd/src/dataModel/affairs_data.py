@@ -1,10 +1,9 @@
 # -*- coding:utf-8 -*- 
-import pprint
 import re
 import sqlite3
 import time
 import uuid
-import logging
+from loguru import logger 
 
 from config.backend_conf import LIST_DATA_DB,AFFAIR_CONTENT_DATA_DB
 from config.backend_conf import AFFAIR_LIST_TABLE,AFFAIR_CONTENT_DATA_DB
@@ -85,7 +84,7 @@ class AffairContent(DataModel):
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' and name != 'sqlite_sequence' order by name")
                 tables = cursor.fetchall()
                 for table in tables: 
-                    logging.info(f"Upgrading table '{table[0]}'...")
+                    logger.info(f"Upgrading table '{table[0]}'...")
                     cursor.execute(f"ALTER TABLE '{table[0]}' ADD COLUMN timeused REAL NOT NULL DEFAULT 0.5;")
                     change_name_fun = lambda old_name,new_name: self.__RENAME_COLUMN_NAME % { "affair_id":table[0],
                                                                                               "old_column_name": old_name, 
@@ -98,7 +97,7 @@ class AffairContent(DataModel):
                 self.__db.commit()
                 ret = True
             except sqlite3.Error as e:
-                logging.error(e)
+                logger.exception(e)
 
         return ret,"V1.0.1"
 
@@ -128,7 +127,7 @@ class AffairContent(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
     def __del__(self):
         self.__db.close()
@@ -161,7 +160,7 @@ class AffairContent(DataModel):
             if ret['timestamp'] == timestamp:
                 ret = AffairList().update_record(self.__affair_id, status, timestamp)
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return ret
@@ -194,7 +193,7 @@ class AffairContent(DataModel):
             # 更新list中的项目状态
             ret = AffairList().update_record(self.__affair_id, status, timestamp)
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return ret
@@ -211,7 +210,7 @@ class AffairContent(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -229,7 +228,7 @@ class AffairContent(DataModel):
             result = cursor.fetchall()
             cursor.close()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         for iter in result:
             if re.match('^[a-zA-Z]+$', iter["status"]):
@@ -239,7 +238,7 @@ class AffairContent(DataModel):
 
     #查询最后一条记录
     def search_latest_record(self):
-        result=[]
+        result={}
         try:
             cursor = self.__db.cursor()
             if self.__affair_id != "":
@@ -253,7 +252,7 @@ class AffairContent(DataModel):
             result = cursor.fetchone()
             cursor.close()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             
         return result
 
@@ -268,7 +267,7 @@ class AffairContent(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -381,7 +380,7 @@ class AffairList(DataModel):
         ret=False
         if "V1.0.2">local_verisons:
             try:
-                logging.info(f"Upgrading table '{self.__table_name}'...")
+                logger.info(f"Upgrading table '{self.__table_name}'...")
                 cursor = self.__db.cursor()
                 # 改名
                 change_name_fun = lambda old_name,new_name: self.__RENAME_COLUMN_NAME % { "affair_list_table":self.__table_name, 
@@ -408,7 +407,7 @@ class AffairList(DataModel):
                 self.__db.commit()
                 ret=True
             except sqlite3.Error as e:
-                pprint.pprint(e)
+                logger.exception(e)
 
         return ret,"V1.0.2"
 
@@ -423,7 +422,7 @@ class AffairList(DataModel):
                 self.__db.commit()
                 ret=True
             except sqlite3.Error as e:
-                pprint.pprint(e)
+                logger.exception(e)
 
         return ret,"V1.0.1"
 
@@ -451,7 +450,7 @@ class AffairList(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
 
     def __del__(self):
@@ -477,7 +476,7 @@ class AffairList(DataModel):
             self.__db.commit()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -533,7 +532,7 @@ class AffairList(DataModel):
             OptionData("relateperson_opt").option_add(linkperson)
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -548,7 +547,7 @@ class AffairList(DataModel):
             self.__db.commit()
             AffairContent(id).delete_table()
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
             return False
 
         return True
@@ -587,7 +586,7 @@ class AffairList(DataModel):
             cursor.close()
 
         except sqlite3.Error as e:
-            logging.error(e)
+            logger.exception(e)
 
         # 修饰
         for res in result:

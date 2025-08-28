@@ -11,11 +11,13 @@ import os
 import socket
 import sys
 from loguru import logger
-from pprint import pprint 
-from flask import Flask,abort
-from flask import request
+import logging
+from flask import Flask, make_response,jsonify
 from flask_restful import Api
 from waitress import serve
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 #from apiRoute.affair import *
 from apiRoute.login import *
@@ -36,13 +38,37 @@ if hasattr(sys,'_MEIPASS'):
 else:
     app = Flask(__name__,static_url_path='',static_folder='../static')
 
+app.config['SECRET_KEY'] = os.urandom(24).hex()
+# FIXME: 改成环境变量读取而不是硬编码,此处仅作示例，无实际使用
+users = {'admin': generate_password_hash('qianrushichuandai')}
+
+auth = HTTPBasicAuth()
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and check_password_hash(users[username], password):
+        return username
+    return None
+
+@auth.error_handler
+def unauthorized():
+    # 关键：使用 Basic 而不是 Digest
+    response = make_response(jsonify({'error': '请登录以访问此资源'}), 401)
+    response.headers['WWW-Authenticate'] = 'Basic realm="Authentication Required"'
+    return response
+
+app.config['DIGEST_AUTH_USERNAME'] = 'admin'
+app.config['DIGEST_AUTH_PASSWORD'] = 'qianrushichuandai'
+
 api = Api(app)
 
 @app.route('/')
+@auth.login_required
 def index():
     return app.send_static_file("index.html")
 
 @app.route('/static/<file_name>')
+@auth.login_required
 def static_file_request(file_name):
     return app.send_static_file(f'{file_name}')
 
@@ -77,6 +103,7 @@ def check_port(ip, port=80):
     except socket.error as e:
         return True 
 
+
 def main():
     #make data dir
     if not os.path.exists(DATA_DIR):
@@ -89,8 +116,6 @@ def main():
         else:
             port = port + 1
 
-    # logging.basicConfig(level=logging.INFO,
-    #                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
     #update Data Model
     DataVersion(AffairList(),
                 AffairContent(),
@@ -100,11 +125,17 @@ def main():
                 OptionData("prjmodel_opt"),
                 OptionData("dutyperson_opt"),
                 OptionData("relateperson_opt"))
-    # logging.basicConfig()
-    # logger = logging.getLogger('waitress')
-    # logger.setLevel(logging.DEBUG)
-    # serve(app, host="0.0.0.0", port=port)
-    app.run(debug=False,host='0.0.0.0',port=port)
+
+    logger.info("🚀 Starting Waitress server with Loguru for REPORTER SYS! LONG LIVE EWD Group!")
+
+    # serve(
+    #     app, 
+    #     host='0.0.0.0', 
+    #     port=port,
+    #     ident="Report",  # 服务器标识
+    # )
+    # 开发使用此启动服务器
+    app.run(debug=True, host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
     main()

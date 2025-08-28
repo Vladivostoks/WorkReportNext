@@ -34,7 +34,8 @@
 // import loginLogo from '@/assets/img/132180-2023.json'
 import loginLogo from '@/assets/img/blooming-2025.json'
 
-import LoadingLottie from '@/assets/img/96215-loading-blue.json'
+// import LoadingLottie from '@/assets/img/96215-loading-blue.json'
+import LoadingLottie from '@/assets/img/Loading.json'
 // import background from '@/assets/img/92013-abstract-blue-and-yellow.json'
 // import background from "@/assets/img/110106-am-impact-zorg-websites.json"
 import background from "@/assets/img/chatting-Illustration.json"

@@ -217,7 +217,7 @@ import { RpcGetTimeline, ItemStatus, RpcDeleteTimeline, RpcPushTimeline, RpcPutT
 import type { TimelineInfo, } from '@/assets/js/timeline'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { UserInfo, USER_STATUS } from '@/stores/counter';
-import CheckLottie from '@/assets/img/1798-check-animation.json'
+import CheckLottie from '@/assets/img/check-mark.json'
 import Memo from "@/components/MainView/Body/Memo.vue"
  
 export type TimelineStatus = "normal"|"wait"|"process"|"finish"|"error"|"success";

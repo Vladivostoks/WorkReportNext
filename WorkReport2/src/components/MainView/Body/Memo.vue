@@ -138,7 +138,8 @@ const user_info = UserInfo()
 const emit = defineEmits(['itemChange'])
 
 //备忘录编辑状态
-const editable:Ref<boolean> = ref(InCurrentWeek(prop.timestamp));
+// const editable:Ref<boolean> = ref(InCurrentWeek(prop.timestamp));
+const editable:Ref<boolean> = ref(true);
 const remind_edit:Ref<boolean> = ref(false);
 const activeNames:Ref<string[]> = ref([]);
 let memo_list:Ref<MemoInfo[]> = ref([]);

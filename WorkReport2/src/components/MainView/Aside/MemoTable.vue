@@ -32,7 +32,7 @@
     </el-table-column>
     <el-table-column prop="link_uuid" label="关联项目信息" min-width="27%">
       <template #default="scope">
-        <el-popover placement="top" :width="400" :visible="scope.row.popover_visible">
+        <el-popover placement="left-start" :width="400" :visible="scope.row.popover_visible">
           <template #reference>
             <el-button style="margin-left: 0px; white-space: normal; word-break: break-word; height: auto; line-height: 1.5;" 
                        type='primary' text
